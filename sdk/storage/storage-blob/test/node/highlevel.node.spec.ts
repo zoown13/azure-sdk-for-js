@@ -10,8 +10,10 @@ import { record, Recorder } from "@azure/test-utils-recorder";
 import { ContainerClient, BlobClient, BlockBlobClient } from "../../src";
 import { readStreamToLocalFileWithLogs } from "../../test/utils/testutils.node";
 
+const iterations = process.env.STRESS_ITERATIONS || 10;
+for (let i = 1; i <= iterations; i++) {
 // tslint:disable:no-empty
-describe("Highlevel", () => {
+describe.only("Highlevel", () => {
   setupEnvironment();
   const blobServiceClient = getBSU();
   let containerName: string;
@@ -589,3 +591,4 @@ describe("Highlevel", () => {
     }
   });
 });
+}
