@@ -85,7 +85,7 @@ function. This gives you a sender which you can use to [send](https://docs.micro
 
 You can also use the [sendBatch](https://docs.microsoft.com/en-us/javascript/api/@azure/service-bus/sender#sendbatch-sendablemessageinfo---) method to send multiple messages using a single call.
 
-```javascript
+```ts
 const queueClient = serviceBusClient.createQueueClient("my-queue");
 const sender = queueClient.createSender();
 await sender.send({
@@ -103,7 +103,7 @@ await sender.sendBatch([
 Once you have created an instance of a `QueueClient` or `SubscriptionClient` class, create a receiver
 using the [createReceiver](https://docs.microsoft.com/en-us/javascript/api/%40azure/service-bus/queueclient#createreceiver-receivemode-) function.
 
-```javascript
+```ts
 const queueClient = serviceBusClient.createQueueClient("my-queue");
 const receiver = queueClient.createReceiver(ReceiveMode.peekLock);
 ```
@@ -115,7 +115,7 @@ You can use this receiver in one of 3 ways to receive messages:
 Use the [receiveMessages](https://docs.microsoft.com/en-us/javascript/api/%40azure/service-bus/receiver#receivemessages-number--number-) function which returns a promise that
 resolves to an array of messages.
 
-```javascript
+```ts
 const myMessages = await receiver.receiveMessages(10);
 ```
 
@@ -125,7 +125,7 @@ Use the [registerMessageHandler](https://docs.microsoft.com/en-us/javascript/api
 message handlers and have it running as long as you
 need. When you are done, call `receiver.close()` to stop receiving any more messages.
 
-```javascript
+```ts
 const myMessageHandler = async (message) => {
   // your code here
 };
@@ -139,7 +139,7 @@ receiver.registerMessageHandler(myMessageHandler, myErrorHandler);
 
 Use the [getMessageIterator](https://docs.microsoft.com/en-us/javascript/api/%40azure/service-bus/receiver#getmessageiterator--) to get an async iterator over messages
 
-```javascript
+```ts
 for await (let message of receiver.getMessageIterator()){
   // your code here
 }
@@ -160,7 +160,7 @@ function. This gives you a sender which you can use to [send](https://docs.micro
 When sending the message, set the `sessionId` property in the message body to ensure your message
 lands in the right session.
 
-```javascript
+```ts
 const queueClient = serviceBusClient.createQueueClient("my-session-queue");
 const sender = queueClient.createSender();
 await sender.send({
@@ -176,7 +176,7 @@ to it. Then, use an instance of `QueueClient` or `SubscriptionClient` to create 
 using the [createReceiver](https://docs.microsoft.com/en-us/javascript/api/%40azure/service-bus/queueclient#createreceiver-receivemode--sessionreceiveroptions-) function. Note
 that you will need to specify the session from which you want to receive messages.
 
-```javascript
+```ts
 const queueClient = serviceBusClient.createQueueClient("my-session-queue");
 const receiver = queueClient.createReceiver(ReceiveMode.peekLock, { sessionId: "my-session" });
 ```

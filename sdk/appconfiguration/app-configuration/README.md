@@ -51,7 +51,7 @@ Authentication via service principal is done by:
 
 Using [DefaultAzureCredential](https://github.com/Azure/azure-sdk-for-js/blob/master/sdk/identity/identity/README.md#defaultazurecredential)
 
-```javascript
+```ts
   const azureIdentity= require("@azure/identity");
   const appConfig = require("@azure/app-configuration");
   
@@ -121,7 +121,7 @@ setting = await.getConfigurationSetting(setting);
 
 #### Create and get a setting
 
-```javascript
+```ts
 const appConfig = require("@azure/app-configuration");
 
 const client = new appConfig.AppConfigurationClient(

@@ -116,13 +116,13 @@ The following components and their corresponding client libraries make up the Az
 
 To use the clients, import the package into your file:
 
-```javascript
+```ts
 const AzureStorageFileShare = require("@azure/storage-file-share");
 ```
 
 Alternative, selectively import only the types you need:
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 ```
 
@@ -134,7 +134,7 @@ The `ShareServiceClient` requires an URL to the file share service and an access
 
 Pass in a `StorageSharedKeyCredential` with your account name and account key. (The account-name and account-key can be obtained from the azure portal.)
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 // Enter your storage account name and shared key
@@ -155,7 +155,7 @@ const serviceClient = new ShareServiceClient(
 
 Also, You can instantiate a `ShareServiceClient` with a shared access signatures (SAS). You can get the SAS token from the Azure Portal or generate one using `generateAccountSASQueryParameters()`.
 
-```javascript
+```ts
 const { ShareServiceClient } = require("@azure/storage-file-share");
 
 const account = "<account name>";
@@ -171,7 +171,7 @@ const serviceClientWithSAS = new ShareServiceClient(
 Use `ShareServiceClient.listShares()` to iterator shares in this account,
 with the new `for-await-of` syntax:
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -197,7 +197,7 @@ main();
 
 Alternatively without `for-await-of`:
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -224,7 +224,7 @@ main();
 
 ### Create a new share and a directory
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -253,7 +253,7 @@ main();
 
 ### Create an azure file then upload to it
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -291,7 +291,7 @@ Use `DirectoryClient.listFilesAndDirectories()` to iterator over files and direc
 with the new `for-await-of` syntax. The `kind` property can be used to identify whether
 a iterm is a directory or a file.
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -326,7 +326,7 @@ main();
 
 Alternatively without using `for-await-of`:
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -364,7 +364,7 @@ For a complete sample on iterating please see [samples/iterators-files-and-direc
 
 ### Download a file and convert it to a string (Node.js)
 
-```javascript
+```ts
 const { ShareServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 
 const account = "<account>";
@@ -413,7 +413,7 @@ main();
 
 Please refer to the [JavaScript Bundle](#javascript-bundle) section for more information on using this library in the browser.
 
-```javascript
+```ts
 const { ShareServiceClient } = require("@azure/storage-file-share");
 
 const account = "<account name>";
@@ -461,7 +461,7 @@ A complete example of basic scenarios is at [samples/basic.ts](https://github.co
 
 Enabling logging may help uncover useful information about failures. In order to see a log of HTTP requests and responses, set the `AZURE_LOG_LEVEL` environment variable to `info`. Alternatively, logging can be enabled at runtime by calling `setLogLevel` in the `@azure/logger`:
 
-```javascript
+```ts
 import { setLogLevel } from "@azure/logger";
 
 setLogLevel("info");

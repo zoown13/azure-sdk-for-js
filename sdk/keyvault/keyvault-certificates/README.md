@@ -100,14 +100,14 @@ The Key Vault service relies on Azure Active Directory to authenticate requests 
 
 Here's a quick example. First, import `DefaultAzureCredential` and `CertificateClient`:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 ```
 
 Once these are imported, we can next connect to the key vault service. To do this, we'll need to copy some settings from the key vault we are connecting to into our environment variables. Once they are in our environment, we can access them with the following code:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -164,7 +164,7 @@ tasks using Azure Key Vault Certificates. The scenarios that are covered here co
 a certificate with the same name already exists, a new version of the
 certificate is created.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -193,7 +193,7 @@ Besides the name of the certificate and the policy, you can also pass the follow
 - `enabled`: A boolean value that determines whether the certificate can be used or not.
 - `tags`: Any set of key-values that can be used to search and filter certificates.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -312,7 +312,7 @@ optionally get a different version of the certificate by calling
 `getCertificateVersion` if you specify the version. `getCertificateVersion` does not return
 the certificate's policy.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -437,7 +437,7 @@ You can use the PEM headers to extract them accordingly.
 
 `listPropertiesOfCertificates` will list all certificates in the Key Vault.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -462,7 +462,7 @@ main();
 The certificate attributes can be updated to an existing certificate version with
 `updateCertificate`, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -490,7 +490,7 @@ main();
 
 The certificate's policy can also be updated individually with `updateCertificatePolicy`, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -525,7 +525,7 @@ is enabled for the Key Vault, this operation will only label the certificate as 
 _deleted_ certificate. A deleted certificate can't be updated. They can only be either
 read, recovered or purged.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -582,7 +582,7 @@ versions of a specific certificate. The following API methods are available:
 
 Which can be used as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -614,7 +614,7 @@ All of these methods will return **all of the available results** at once. To
 retrieve them by pages, add `.byPage()` right after invoking the API method you
 want to use, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { CertificateClient } = require("@azure/keyvault-certificates");
 
@@ -652,7 +652,7 @@ main();
 
 Enabling logging may help uncover useful information about failures. In order to see a log of HTTP requests and responses, set the `AZURE_LOG_LEVEL` environment variable to `info`. Alternatively, logging can be enabled at runtime by calling `setLogLevel` in the `@azure/logger`:
 
-```javascript
+```ts
 import { setLogLevel } from "@azure/logger";
 
 setLogLevel("info");

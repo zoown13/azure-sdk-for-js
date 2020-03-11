@@ -106,13 +106,13 @@ Key data types in our library related to these services are:
 
 To use the clients, import the package into your file:
 
-```javascript
+```ts
 const AzureStorageQueue = require("@azure/storage-queue");
 ```
 
 Alternatively, selectively import only the types you need:
 
-```javascript
+```ts
 const { QueueServiceClient, StorageSharedKeyCredential } = require("@azure/storage-queue");
 ```
 
@@ -141,7 +141,7 @@ The `QueueServiceClient` requires an URL to the queue service and an access cred
     - From the overview page of your AAD Application, note down the `CLIENT ID` and `TENANT ID`. In the "Certificates & Secrets" tab, create a secret and note that down.
     - Make sure you have `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` as environment variables to successfully execute the sample (can leverage process.env).
 
-  ```javascript
+  ```ts
   const { DefaultAzureCredential } = require("@azure/identity");
   const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -161,7 +161,7 @@ The `QueueServiceClient` requires an URL to the queue service and an access cred
 Alternatively, you instantiate a `QueueServiceClient` with a `StorageSharedKeyCredential` by passing account-name and account-key as arguments. (The account-name and account-key can be obtained from the azure portal.)
   [ONLY AVAILABLE IN NODE.JS RUNTIME]
 
-  ```javascript
+  ```ts
   const { QueueServiceClient, StorageSharedKeyCredential } = require("@azure/storage-queue");
 
   // Enter your storage account name and shared key
@@ -186,7 +186,7 @@ Alternatively, you instantiate a `QueueServiceClient` with a `StorageSharedKeyCr
 
 Also, You can instantiate a `QueueServiceClient` with a shared access signatures (SAS). You can get the SAS token from the Azure Portal or generate one using `generateAccountSASQueryParameters()`.
 
-```javascript
+```ts
 const { QueueServiceClient } = require("@azure/storage-queue");
 const account = "<account name>";
 const sas = "<service Shared Access Signature Token>";
@@ -200,7 +200,7 @@ const queueServiceClient = new QueueServiceClient(
 Use `QueueServiceClient.listQueues()` function to iterate the queues,
 with the new `for-await-of` syntax:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -226,7 +226,7 @@ main();
 
 Alternatively without `for-await-of`:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -257,7 +257,7 @@ For a complete sample on iterating queues please see [samples/typescript/iterato
 
 Use `QueueServiceClient.getQueueClient()` function to create a new queue.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -286,7 +286,7 @@ main();
 
 Use `sendMessage()` to add a message to the queue:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -317,7 +317,7 @@ main();
 `QueueClient.peekMessages()` allows looking at one or more messages in front of the queue. This call
 doesn't prevent other code from accessing peeked messages.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -349,7 +349,7 @@ Messages are processed in two steps.
 
 If your code fails to process a message due to hardware or software failure, this two-step process ensures that another instance of your code can get the same message and try again.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -384,7 +384,7 @@ main();
 
 ### Delete a queue
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { QueueServiceClient } = require("@azure/storage-queue");
 
@@ -415,7 +415,7 @@ A complete example of basic scenarios is at [samples/basic.ts](https://github.co
 
 Enabling logging may help uncover useful information about failures. In order to see a log of HTTP requests and responses, set the `AZURE_LOG_LEVEL` environment variable to `info`. Alternatively, logging can be enabled at runtime by calling `setLogLevel` in the `@azure/logger`:
 
-```javascript
+```ts
 import { setLogLevel } from "@azure/logger";
 
 setLogLevel("info");

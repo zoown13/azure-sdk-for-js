@@ -67,7 +67,7 @@ Authenticating as a managed identity requires no configuration, but does require
 
 ### `DefaultAzureCredential`
 
-```javascript
+```ts
 // The default credential first checks environment variables for configuration as described above.
 // If environment configuration is incomplete, it will try managed identity.
 const { KeyClient } = require("@azure/keyvault-keys");
@@ -81,7 +81,7 @@ const getResult = await client.getKey("MyKeyName");
 
 ### Authenticating as a service principal
 
-```javascript
+```ts
 // Using a client secret
 const { ClientSecretCredential } = require("@azure/identity");
 const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
@@ -105,7 +105,7 @@ The `AuthorizationCodeCredential` takes more up-front work to use than the other
 
 ### Chaining credentials
 
-```javascript
+```ts
 const { ClientSecretCredential, ChainedTokenCredential } = require("@azure/identity");
 
 // When an access token is requested, the chain will try each

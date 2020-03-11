@@ -120,7 +120,7 @@ const documents = [
 
 or, if you wish to pass in a per-item document `id` or `language`/`countryHint`, they can be given as a list of `TextDocumentInput` or `DetectLanguageInput` depending on the operation;
 
-```javascript
+```ts
 const textDocumentInputs = [
   { id: "1", language: "en", text: "I hated the movie. It was so slow!" },
   { id: "2", language: "en", text: "The movie made it into my top ten favorites." },
@@ -144,7 +144,7 @@ In the collection returned by an operation, errors are distinguished from succes
 
 For example, to filter out all errors, you could use the following `filter`:
 
-```javascript
+```ts
 const results = await client.analyzeSentiment(documents);
 const onlySuccessful = results.filter((result) => result.error === undefined);
 ```
@@ -169,7 +169,7 @@ if (result.error !== undefined) {
 
 Analyze sentiment of text to determine if it is positive, negative, neutral, or mixed, including per-sentence sentiment analysis and confidence scores.
 
-```javascript
+```ts
 const { TextAnalyticsClient, TextAnalyticsApiKeyCredential } = require("@azure/ai-text-analytics");
 
 const client = new TextAnalyticsClient(
@@ -205,7 +205,7 @@ Recognize and categorize entities in text as people, places, organizations, date
 
 The `language` parameter is optional. If it is not specified, the default English model will be used.
 
-```javascript
+```ts
 const { TextAnalyticsClient, TextAnalyticsApiKeyCredential } = require("@azure/ai-text-analytics");
 
 const client = new TextAnalyticsClient(
@@ -241,7 +241,7 @@ main();
 
 There is a separate endpoint and operation for recognizing Personally Identifiable Information (PII) in text such as Social Security Numbers, bank account information, credit card numbers, etc. Its usage is very similar to the standard entity recognition above:
 
-```javascript
+```ts
 const { TextAnalyticsClient, TextAnalyticsApiKeyCredential } = require("@azure/ai-text-analytics");
 
 const client = new TextAnalyticsClient(
@@ -276,7 +276,7 @@ main();
 
 A "Linked" entity is one that exists in a knowledge base (such as Wikipedia). The `recognizeLinkedEntities` operation can disambiguate entities by determining which entry in a knowledge base they likely refer to (for example, in a piece of text, does the word "Mars" refer to the planet, or to the Roman god of war). Linked entities contain associated URLs to the knowledge base that provides the definition of the entity.
 
-```javascript
+```ts
 const { TextAnalyticsClient, TextAnalyticsApiKeyCredential } = require("@azure/ai-text-analytics");
 
 const client = new TextAnalyticsClient(
@@ -315,7 +315,7 @@ main();
 
 Key Phrase extraction identifies the main talking points in a document. For example, given input text "The food was delicious and there were wonderful staff", the service returns "food" and "wonderful staff".
 
-```javascript
+```ts
 const { TextAnalyticsClient, TextAnalyticsApiKeyCredential } = require("@azure/ai-text-analytics");
 
 const client = new TextAnalyticsClient(
@@ -351,7 +351,7 @@ Determine the language of a piece of text.
 
 The `countryHint` parameter is optional, but can assist the service in providing correct output if the country of origin is known. If provided, it should be set to an ISO-3166 Alpha-2 two-letter country code (such as "us" for the United States or "jp" for Japan) or to the value `"none"`. If the parameter is not provided, then the default `"us"` (United States) model will be used. If you do not know the country of origin of the document, then the parameter `"none"` should be used, and the Text Analytics service will apply a model that is tuned for an unknown country of origin.
 
-```javascript
+```ts
 const { TextAnalyticsClient, TextAnalyticsApiKeyCredential } = require("@azure/ai-text-analytics");
 
 const client = new TextAnalyticsClient(

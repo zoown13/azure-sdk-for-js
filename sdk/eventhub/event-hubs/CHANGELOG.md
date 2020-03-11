@@ -91,13 +91,13 @@ Construction of both objects is the same as it was for the previous client.
 
   Previously:
 
-  ```javascript
+  ```ts
   const client = await EventHubClient.createFromIotHubConnectionString(iotConnectionString);
   ```
 
   Current:
 
-  ```javascript
+  ```ts
   const client = new EventHubClient(iotEventHubsCompatibleConnectionString);
   ```
 
@@ -340,7 +340,7 @@ For more information, please visit https://aka.ms/azure-sdk-preview1-js
 
 - Added support to create EventHubClient from an IotHub connectionstring. The following can be done
 
-```javascript
+```ts
 const client = await EventHubClient.createFromIotHubConnectionString(
   process.env.IOTHUB_CONNECTION_STRING
 );

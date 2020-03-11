@@ -238,33 +238,33 @@ Add `@azure/test-utils-recorder` as a devDependency of your sdk.
 
 - Install and add the plugins `"karma-json-to-file-reporter", "karma-json-preprocessor"` as `devDependencies`.
 
-  ```javascript
+  ```ts
   plugins: ["karma-json-to-file-reporter", "karma-json-preprocessor"],
   ```
 
 - Import recordings in playback mode
-  ```javascript
+  ```ts
   files: [<your-existing-files-list>].concat(process.env.TEST_MODE === "playback" ? ["recordings/browsers/**/*.json"] : []),
   ```
 - Preprocessor for converting JSON files into JS variables
-  ```javascript
+  ```ts
   preprocessors: {"recordings/browsers/**/*.json": ["json"]};
   ```
 - Load `TEST_MODE` along with other variables
-  ```javascript
+  ```ts
   envPreprocessor: ["TEST_MODE"],
   ```
 - Saving the recordings of browser tests in the `recordings/browsers` folder.
 
   Import `jsonRecordingFilterFunction` from `"@azure/test-utils-recorder"` as shown below.
 
-  ```javascript
+  ```ts
   const { jsonRecordingFilterFunction } = require("@azure/test-utils-recorder");
   ```
 
   jsonToFileReporter in karma.conf.js filters the JSON strings in console.logs
 
-  ```javascript
+  ```ts
   reporters: ["json-to-file"],
 
   jsonToFileReporter: {

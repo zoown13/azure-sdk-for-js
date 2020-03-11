@@ -47,7 +47,7 @@ Interaction with Event Hubs starts with either an instance of the
 or an instance of the [EventHubProducerClient](https://docs.microsoft.com/javascript/api/@azure/event-hubs/eventhubproducerclient) class.
 There are constructor overloads to support different ways of instantiating these classes as shown below:
 
-```javascript
+```ts
 const { EventHubProducerClient, EventHubConsumerClient } = require("@azure/event-hubs");
 
 const producerClient = new EventHubProducerClient("my-connection-string", "my-event-hub");
@@ -60,7 +60,7 @@ const consumerClient = new EventHubConsumerClient(
 
 - This constructor takes a connection string of the form `Endpoint=sb://my-servicebus-namespace.servicebus.windows.net/;SharedAccessKeyName=my-SA-name;SharedAccessKey=my-SA-key;` and entity name to your Event Hub instance. You can create a consumer group, get the connection string as well as the entity name from the [Azure portal](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string#get-connection-string-from-the-portal).
 
-```javascript
+```ts
 const { EventHubProducerClient, EventHubConsumerClient } = require("@azure/event-hubs");
 
 const producerClient = new EventHubProducerClient("my-connection-string-with-entity-path");
@@ -74,7 +74,7 @@ const consumerClient = new EventHubConsumerClient(
 
 If you have defined a shared access policy directly on the Event Hub itself, then copying the connection string from that Event Hub will result in a connection string that contains the path.
 
-```javascript
+```ts
 const { EventHubProducerClient, EventHubConsumerClient } = require("@azure/event-hubs");
 
 const { DefaultAzureCredential } = require("@azure/identity");
@@ -149,7 +149,7 @@ To understand what partitions are available, you query the Event Hub using eithe
 
 In the below example, we are using an `EventHubProducerClient`.
 
-```javascript
+```ts
 const { EventHubProducerClient } = require("@azure/event-hubs");
 
 async function main() {
@@ -177,7 +177,7 @@ You may publish events to a specific partition, or allow the Event Hubs service 
 
 In the below example, we attempt to send 10 events to Azure Event Hubs.
 
-```javascript
+```ts
 const { EventHubProducerClient } = require("@azure/event-hubs");
 
 async function main() {
@@ -235,7 +235,7 @@ consuming events.
 The `subscribe` method takes callbacks to process events as they are received from Azure Event Hubs.
 To stop receiving events, you can call `close()` on the object returned by the `subscribe()` method.
 
-```javascript
+```ts
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 
 async function main() {
@@ -279,7 +279,7 @@ which implements the required read/writes to a durable store by using Azure Blob
 The `subscribe` method takes callbacks to process events as they are received from Azure Event Hubs.
 To stop receiving events, you can call `close()` on the object returned by the `subscribe()` method.
 
-```javascript
+```ts
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 const { ContainerClient } = require("@azure/storage-blob");
 const { BlobCheckpointStore } = require("@azure/eventhubs-checkpointstore-blob");
@@ -322,7 +322,7 @@ In the below example, we are using the first partition.
 The `subscribe` method takes callbacks to process events as they are received from Azure Event Hubs.
 To stop receiving events, you can call `close()` on the object returned by the `subscribe()` method.
 
-```javascript
+```ts
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 
 async function main() {
@@ -360,7 +360,7 @@ hence sending events is not possible.
   [Event Hub-compatible endpoint](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-messages-read-builtin)
   e.g. "Endpoint=sb://my-iothub-namespace-[uid].servicebus.windows.net/;SharedAccessKeyName=my-SA-name;SharedAccessKey=my-SA-key;EntityPath=my-iot-hub-name"
 
-```javascript
+```ts
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 
 async function main() {

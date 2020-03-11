@@ -136,13 +136,13 @@ Data Lake storage offers three types of resources:
 
 To use the clients, import the package into your file:
 
-```javascript
+```ts
 const AzureStorageDataLake = require("@azure/storage-file-datalake");
 ```
 
 Alternatively, selectively import only the types you need:
 
-```javascript
+```ts
 const { DataLakeServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-datalake");
 ```
 
@@ -173,7 +173,7 @@ The `DataLakeServiceClient` requires an URL to the data lake service and an acce
     - From the overview page of your AAD Application, note down the `CLIENT ID` and `TENANT ID`. In the "Certificates & Secrets" tab, create a secret and note that down.
     - Make sure you have AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET as environment variables to successfully execute the sample(Can leverage process.env).
 
-  ```javascript
+  ```ts
   const { DefaultAzureCredential } = require("@azure/identity");
   const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -196,7 +196,7 @@ The `DataLakeServiceClient` requires an URL to the data lake service and an acce
 Alternatively, you instantiate a `DataLakeServiceClient` with a `StorageSharedKeyCredential` by passing account-name and account-key as arguments. (The account-name and account-key can be obtained from the azure portal.)
   [ONLY AVAILABLE IN NODE.JS RUNTIME]
 
-  ```javascript
+  ```ts
   const { DataLakeServiceClient, StorageSharedKeyCredential } = require("@azure/storage-file-datalake");
 
   // Enter your storage account name and shared key
@@ -216,7 +216,7 @@ Alternatively, you instantiate a `DataLakeServiceClient` with a `StorageSharedKe
 
 Also, You can instantiate a `DataLakeServiceClient` with a shared access signatures (SAS). You can get the SAS token from the Azure Portal or generate one using `generateAccountSASQueryParameters()`.
 
-```javascript
+```ts
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
 const account = "<account name>";
@@ -230,7 +230,7 @@ const serviceClientWithSAS = new DataLakeServiceClient(
 
 Use `DataLakeServiceClient.getFileSystemClient()` to get a file system client instance then create a new file system resource.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -258,7 +258,7 @@ main();
 Use `DataLakeServiceClient.listFileSystems()` function to iterate the file systems,
 with the new `for-await-of` syntax:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -283,7 +283,7 @@ main();
 
 Alternatively without using `for-await-of`:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -310,7 +310,7 @@ main();
 
 In addition, pagination is supported for listing too via `byPage()`:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -338,7 +338,7 @@ main();
 
 ### Create and delete a directory
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -364,7 +364,7 @@ main();
 
 ### Create a file
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -397,7 +397,7 @@ main();
 
 Similar to listing file systems.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -426,7 +426,7 @@ main();
 
 ### Download a file and convert it to a string (Node.js)
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -471,7 +471,7 @@ main();
 
 ### Download a file and convert it to a string (Browsers)
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { DataLakeServiceClient } = require("@azure/storage-file-datalake");
 
@@ -519,7 +519,7 @@ main();
 
 Enabling logging may help uncover useful information about failures. In order to see a log of HTTP requests and responses, set the `AZURE_LOG_LEVEL` environment variable to `info`. Alternatively, logging can be enabled at runtime by calling `setLogLevel` in the `@azure/logger`:
 
-```javascript
+```ts
 import { setLogLevel } from "@azure/logger";
 
 setLogLevel("info");

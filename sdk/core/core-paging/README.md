@@ -11,7 +11,7 @@ then run `rush install` after cloning the repo.
 
 Otherwise, use npm to install this package in your application as follows
 
-```javascript
+```ts
 npm install @azure/core-paging
 ```
 

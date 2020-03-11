@@ -130,7 +130,7 @@ The Key Vault service relies on Azure Active Directory to authenticate requests 
 
 Here's a quick example. First, import `DefaultAzureCredential` and `KeyClient`:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 ```
@@ -171,7 +171,7 @@ tasks using Azure Key Vault Keys. The scenarios that are covered here consist of
 `createKey` creates a Key to be stored in the Azure Key Vault. If a key with
 the same name already exists, then a new version of the key is created.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -209,7 +209,7 @@ parameters.
 
 `getKey` retrieves a key previous stores in the Key Vault.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -245,7 +245,7 @@ The following attributes can also be assigned to any key in a Key Vault:
 An object with these attributes can be sent as the third parameter of
 `createKey`, right after the key's name and value, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -274,7 +274,7 @@ provided attributes.
 Attributes can also be updated to an existing key version with
 `updateKeyProperties`, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -303,7 +303,7 @@ The `beginDeleteKey` method starts the deletion of a key.
 This process will happen in the background as soon as the necessary resources
 are available.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -329,7 +329,7 @@ is enabled for the Key Vault, this operation will only label the key as a
 _deleted_ key. A deleted key can't be updated. They can only be either
 read, recovered or purged.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -448,7 +448,7 @@ versions of a specific key. The following API methods are available:
 
 Which can be used as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -480,7 +480,7 @@ All of these methods will return **all of the available results** at once. To
 retrieve them by pages, add `.byPage()` right after invoking the API method you
 want to use, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { KeyClient } = require("@azure/keyvault-keys");
 
@@ -549,7 +549,7 @@ const cryptographyClient = new CryptographyClient(myKey.id, credential);
 
 `encrypt` will encrypt a message. The following algorithms are currently supported: "RSA-OAEP", "RSA-OAEP-256", and "RSA1_5".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -575,7 +575,7 @@ main();
 
 `decrypt` will decrypt an encrypted message. The following algorithms are currently supported: "RSA-OAEP", "RSA-OAEP-256", and "RSA1_5".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -604,7 +604,7 @@ main();
 
 `sign` will cryptographically sign the digest (hash) of a message with a signature. The following algorithms are currently supported: "PS256", "PS384", "PS512", "RS256", "RS384", "RS512", "ES256","ES256K", "ES384", and "ES512".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 import { createHash } from "crypto";
@@ -637,7 +637,7 @@ main();
 
 `signData` will cryptographically sign a message with a signature. The following algorithms are currently supported: "PS256", "PS384", "PS512", "RS256", "RS384", "RS512", "ES256","ES256K", "ES384", and "ES512".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -663,7 +663,7 @@ main();
 
 `verify` will cryptographically verify that the signed digest was signed with the given signature. The following algorithms are currently supported: "PS256", "PS384", "PS512", "RS256", "RS384", "RS512", "ES256","ES256K", "ES384", and "ES512".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -696,7 +696,7 @@ main();
 
 `verifyData` will cryptographically verify that the signed message was signed with the given signature. The following algorithms are currently supported: "PS256", "PS384", "PS512", "RS256", "RS384", "RS512", "ES256","ES256K", "ES384", and "ES512".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -727,7 +727,7 @@ main();
 
 `wrapKey` will wrap a key with an encryption layer. The following algorithms are currently supported: "RSA-OAEP", "RSA-OAEP-256", and "RSA1_5".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -753,7 +753,7 @@ main();
 
 `unwrapKey` will unwrap a wrapped key. The following algorithms are currently supported: "RSA-OAEP", "RSA-OAEP-256", and "RSA1_5".
 
-```javascript
+```ts
 import { DefaultAzureCredential } from "@azure/identity";
 import { KeyClient, CryptographyClient } from "@azure/keyvault-keys";
 
@@ -782,7 +782,7 @@ main();
 
 Enabling logging may help uncover useful information about failures. In order to see a log of HTTP requests and responses, set the `AZURE_LOG_LEVEL` environment variable to `info`. Alternatively, logging can be enabled at runtime by calling `setLogLevel` in the `@azure/logger`:
 
-```javascript
+```ts
 import { setLogLevel } from "@azure/logger";
 
 setLogLevel("info");

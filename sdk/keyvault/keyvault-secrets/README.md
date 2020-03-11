@@ -119,7 +119,7 @@ The Key Vault service relies on Azure Active Directory to authenticate requests 
 
 Here's a quick example. First, import `DefaultAzureCredential` and `SecretClient`:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 ```
@@ -160,7 +160,7 @@ tasks using Azure Key Vault Secrets. The scenarios that are covered here consist
 `setSecret` assigns a provided value to the specified secret name. If a secret
 with the same name already exists, then a new version of the secret is created.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -188,7 +188,7 @@ name. This will retrieve the most recent version of the secret. You can
 optionally get a different version of the key if you specify it as part of the
 optional parameters.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -225,7 +225,7 @@ the following attributes:
 An object with these attributes can be sent as the third parameter of
 `setSecret`, right after the secret's name and value, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -253,7 +253,7 @@ provided attributes.
 Attributes can also be updated to an existing secret version with
 `updateSecretProperties`, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -280,7 +280,7 @@ The `beginDeleteSecret` method starts the deletion of a Secret.
 This process will happen in the background as soon as the necessary resources
 are available.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -305,7 +305,7 @@ is enabled for the Key Vault, this operation will only label the secret as a
 _deleted_ secret. A deleted secret can't be updated. They can only be either
 read, recovered or purged.
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -424,7 +424,7 @@ versions of a specific secret. The following API methods are available:
 
 Which can be used as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -456,7 +456,7 @@ All of these methods will return **all of the available results** at once. To
 retrieve them by pages, add `.byPage()` right after invoking the API method you
 want to use, as follows:
 
-```javascript
+```ts
 const { DefaultAzureCredential } = require("@azure/identity");
 const { SecretClient } = require("@azure/keyvault-secrets");
 
@@ -494,7 +494,7 @@ main();
 
 Enabling logging may help uncover useful information about failures. In order to see a log of HTTP requests and responses, set the `AZURE_LOG_LEVEL` environment variable to `info`. Alternatively, logging can be enabled at runtime by calling `setLogLevel` in the `@azure/logger`:
 
-```javascript
+```ts
 import { setLogLevel } from "@azure/logger";
 
 setLogLevel("info");

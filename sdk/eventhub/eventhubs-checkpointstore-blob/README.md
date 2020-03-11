@@ -57,7 +57,7 @@ You also need to enable `compilerOptions.allowSyntheticDefaultImports` in your t
 
 Use the below code snippet to create a `CheckpointStore`. You will need to provide the connection string to your storage account.
 
-```javascript
+```ts
 import { ContainerClient } from "@azure/storage-blob",
 import { BlobCheckpointStore } from "@azure/eventhubs-checkpointstore-blob"
 
@@ -78,7 +78,7 @@ interface along with code to call the `updateCheckpoint()` method.
 
 In this example, `SubscriptionHandlers` implements [SubscriptionEventHandlers](https://docs.microsoft.com/en-us/javascript/api/@azure/event-hubs/subscriptioneventhandlers) and also handles checkpointing.
 
-```javascript
+```ts
 import { ContainerClient } from "@azure/storage-blob";
 import { BlobCheckpointStore } from "@azure/eventhubs-checkpointstore-blob";
 import { EventHubConsumerClient } from "@azure/event-hubs";
