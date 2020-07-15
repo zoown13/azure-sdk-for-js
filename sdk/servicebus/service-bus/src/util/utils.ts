@@ -1,27 +1,39 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 import Long from "long";
 import * as log from "../log";
-import { generate_uuid } from "rhea-promise";
+import { OperationTimeoutError, generate_uuid } from "rhea-promise";
 import isBuffer from "is-buffer";
 import { Buffer } from "buffer";
 import * as Constants from "../util/constants";
+import { AbortError, AbortSignalLike } from "@azure/abort-controller";
 
 // This is the only dependency we have on DOM types, so rather than require
 // the DOM lib we can just shim this in.
+/**
+ * @ignore
+ * @internal
+ */
 interface Navigator {
   hardwareConcurrency: number;
 }
+/**
+ * @ignore
+ * @internal
+ */
 declare const navigator: Navigator;
 
 /**
+ * @internal
+ * @ignore
  * A constant that indicates whether the environment is node.js or browser based.
  */
 export const isNode = typeof navigator === "undefined" && typeof process !== "undefined";
 
 /**
  * @internal
+ * @ignore
  * Provides a uniue name by appending a string guid to the given string in the following format:
  * `{name}-{uuid}`.
  * @param name The nme of the entity
@@ -32,6 +44,7 @@ export function getUniqueName(name: string): string {
 
 /**
  * @internal
+ * @ignore
  * If you try to turn a Guid into a Buffer in .NET, the bytes of the first three groups get
  * flipped within the group, but the last two groups don't get flipped, so we end up with a
  * different byte order. This is the order of bytes needed to make Service Bus recognize the token.
@@ -70,6 +83,7 @@ export function reorderLockToken(lockTokenBytes: Buffer): Buffer {
 
 /**
  * @internal
+ * @ignore
  * Provides the time in milliseconds after which the lock renewal should occur.
  * @param lockedUntilUtc - The time until which the message is locked.
  */
@@ -91,6 +105,7 @@ export function calculateRenewAfterDuration(lockedUntilUtc: Date): number {
 
 /**
  * @internal
+ * @ignore
  * Converts the .net ticks to a JS Date object.
  *
  * - The epoch for the DateTimeOffset type is `0000-01-01`, while the epoch for JS Dates is
@@ -117,6 +132,7 @@ export function convertTicksToDate(buf: number[]): Date {
 
 /**
  * @internal
+ * @ignore
  * Returns the number of logical processors in the system.
  */
 export function getProcessorCount(): number {
@@ -130,6 +146,7 @@ export function getProcessorCount(): number {
 
 /**
  * @internal
+ * @ignore
  * Converts any given input to a Buffer.
  * @param input The input that needs to be converted to a Buffer.
  */
@@ -163,6 +180,7 @@ export function toBuffer(input: any): Buffer {
 }
 
 /**
+ * @internal
  * @ignore
  * Helper utility to retrieve `string` value from given string,
  * or throws error if undefined.
@@ -179,6 +197,7 @@ export function getString(value: any, nameOfProperty: string): string {
 }
 
 /**
+ * @internal
  * @ignore
  * Helper utility to retrieve `string` value from given input,
  * or undefined if not passed in.
@@ -192,6 +211,7 @@ export function getStringOrUndefined(value: any): string | undefined {
 }
 
 /**
+ * @internal
  * @ignore
  * Helper utility to retrieve `integer` value from given string,
  * or throws error if undefined.
@@ -208,6 +228,7 @@ export function getInteger(value: any, nameOfProperty: string): number {
 }
 
 /**
+ * @internal
  * @ignore
  * Helper utility to retrieve `integer` value from given string,
  * or undefined if not passed in.
@@ -222,6 +243,17 @@ export function getIntegerOrUndefined(value: any): number | undefined {
 }
 
 /**
+ * @internal
+ * @ignore
+ * Helper utility to convert ISO-8601 time into Date type.
+ * @param value
+ */
+export function getDate(value: string, nameOfProperty: string): Date {
+  return new Date(getString(value, nameOfProperty));
+}
+
+/**
+ * @internal
  * @ignore
  * Helper utility to retrieve `boolean` value from given string,
  * or throws error if undefined.
@@ -238,6 +270,7 @@ export function getBoolean(value: any, nameOfProperty: string): boolean {
 }
 
 /**
+ * @internal
  * @ignore
  * Helper utility to retrieve `boolean` value from given string,
  * or undefined if not passed in.
@@ -256,6 +289,7 @@ export function getBooleanOrUndefined(value: any): boolean | undefined {
 }
 
 /**
+ * @internal
  * @ignore
  * Returns `true` if given input is a JSON like object.
  * @param value
@@ -265,7 +299,8 @@ export function isJSONLikeObject(value: any): boolean {
 }
 
 /**
- *  @ignore
+ * @internal
+ * @ignore
  * Helper utility to retrieve message count details from given input,
  * or undefined if not passed in.
  * @param value
@@ -284,7 +319,7 @@ export function getCountDetailsOrUndefined(value: any): MessageCountDetails | un
 }
 
 /**
- * Represents type of message count details in ATOM based management operations
+ * Represents type of message count details in ATOM based management operations.
  */
 export type MessageCountDetails = {
   activeMessageCount: number;
@@ -295,7 +330,7 @@ export type MessageCountDetails = {
 };
 
 /**
- * Represents type of `AuthorizationRule` in ATOM based management operations
+ * Represents type of `AuthorizationRule` in ATOM based management operations.
  */
 export type AuthorizationRule = {
   claimType: string;
@@ -307,7 +342,8 @@ export type AuthorizationRule = {
 };
 
 /**
- *  @ignore
+ * @internal
+ * @ignore
  * Helper utility to retrieve array of `AuthorizationRule` from given input,
  * or undefined if not passed in.
  * @param value
@@ -336,7 +372,9 @@ export function getAuthorizationRulesOrUndefined(value: any): AuthorizationRule[
 }
 
 /**
- * Helper utility to build an instance of parsed authorization rule as `AuthorizationRule` from given input,
+ * @internal
+ * @ignore
+ * Helper utility to build an instance of parsed authorization rule as `AuthorizationRule` from given input.
  * @param value
  */
 function buildAuthorizationRule(value: any): AuthorizationRule {
@@ -366,7 +404,8 @@ function buildAuthorizationRule(value: any): AuthorizationRule {
 }
 
 /**
- *  @ignore
+ * @internal
+ * @ignore
  * Helper utility to extract output containing array of `RawAuthorizationRule` instances from given input,
  * or undefined if not passed in.
  * @param value
@@ -394,7 +433,9 @@ export function getRawAuthorizationRules(authorizationRules: AuthorizationRule[]
 }
 
 /**
- * Helper utility to build an instance of raw authorization rule as RawAuthorizationRule from given `AuthorizationRule` input,
+ * @internal
+ * @ignore
+ * Helper utility to build an instance of raw authorization rule as RawAuthorizationRule from given `AuthorizationRule` input.
  * @param authorizationRule parsed Authorization Rule instance
  */
 function buildRawAuthorizationRule(authorizationRule: AuthorizationRule): any {
@@ -423,4 +464,124 @@ function buildRawAuthorizationRule(authorizationRule: AuthorizationRule): any {
     "xmlns:p5": "http://www.w3.org/2001/XMLSchema-instance"
   };
   return rawAuthorizationRule;
+}
+
+/**
+ * @internal
+ * @ignore
+ * Helper utility to check if given string is an absolute URL
+ * @param url
+ */
+export function isAbsoluteUrl(url: string) {
+  const _url = url.toLowerCase();
+  return _url.startsWith("sb://") || _url.startsWith("http://") || _url.startsWith("https://");
+}
+
+/**
+ * Possible values for `status` of the Service Bus messaging entities.
+ */
+export type EntityStatus =
+  | "Active"
+  | "Creating"
+  | "Deleting"
+  | "ReceiveDisabled"
+  | "SendDisabled"
+  | "Disabled"
+  | "Renaming"
+  | "Restoring"
+  | "Unknown";
+
+/**
+ * @internal
+ * @ignore
+ */
+export const StandardAbortMessage = "The operation was aborted.";
+
+/**
+ * An executor for a function that returns a Promise that obeys both a timeout and an
+ * optional AbortSignal.
+ * @param timeoutMs - The number of milliseconds to allow before throwing an OperationTimeoutError.
+ * @param timeoutMessage - The message to place in the .description field for the thrown exception for Timeout.
+ * @param abortSignal - The abortSignal associated with containing operation.
+ * @param abortErrorMsg - The abort error message associated with containing operation.
+ * @param value - The value to be resolved with after a timeout of t milliseconds.
+ * @returns {Promise<T>} - Resolved promise
+ *
+ * @internal
+ * @ignore
+ */
+export async function waitForTimeoutOrAbortOrResolve<T>(args: {
+  actionFn: () => Promise<T>;
+  timeoutMs: number;
+  timeoutMessage: string;
+  abortSignal?: AbortSignalLike;
+  // these are optional and only here for testing.
+  timeoutFunctions?: {
+    setTimeoutFn: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => any;
+    clearTimeoutFn: (timeoutId: any) => void;
+  };
+}): Promise<T> {
+  if (args.abortSignal && args.abortSignal.aborted) {
+    throw new AbortError(StandardAbortMessage);
+  }
+
+  let timer: any | undefined = undefined;
+  let clearAbortSignal: (() => void) | undefined = undefined;
+
+  const clearAbortSignalAndTimer = (): void => {
+    (args.timeoutFunctions?.clearTimeoutFn ?? clearTimeout)(timer);
+
+    if (clearAbortSignal) {
+      clearAbortSignal();
+    }
+  };
+
+  // eslint-disable-next-line promise/param-names
+  const abortOrTimeoutPromise = new Promise<T>((_resolve, reject) => {
+    clearAbortSignal = checkAndRegisterWithAbortSignal(reject, args.abortSignal);
+
+    timer = (args.timeoutFunctions?.setTimeoutFn ?? setTimeout)(() => {
+      reject(new OperationTimeoutError(args.timeoutMessage));
+    }, args.timeoutMs);
+  });
+
+  try {
+    return await Promise.race([abortOrTimeoutPromise, args.actionFn()]);
+  } finally {
+    clearAbortSignalAndTimer();
+  }
+}
+
+/**
+ * Registers listener to the abort event on the abortSignal to call your abortFn and
+ * returns a function that will clear the same listener.
+ *
+ * If abort signal is already aborted, then throws an AbortError and returns a function that does nothing
+ *
+ * @returns A function that removes any of our attached event listeners on the abort signal or an empty function if
+ * the abortSignal was not defined.
+ *
+ * @internal
+ * @ignore
+ */
+export function checkAndRegisterWithAbortSignal(
+  onAbortFn: (abortError: AbortError) => void,
+  abortSignal?: AbortSignalLike
+): () => void {
+  if (abortSignal == null) {
+    return () => {};
+  }
+
+  if (abortSignal.aborted) {
+    throw new AbortError(StandardAbortMessage);
+  }
+
+  const onAbort = (): void => {
+    abortSignal.removeEventListener("abort", onAbort);
+    onAbortFn(new AbortError(StandardAbortMessage));
+  };
+
+  abortSignal.addEventListener("abort", onAbort);
+
+  return () => abortSignal.removeEventListener("abort", onAbort);
 }

@@ -1,50 +1,53 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+export { AzureKeyCredential } from "@azure/core-auth";
+
 export {
   TextAnalyticsClient,
   TextAnalyticsClientOptions,
-  DetectLanguagesOptions,
-  RecognizeEntitiesOptions,
+  DetectLanguageOptions,
+  RecognizeCategorizedEntitiesOptions,
   AnalyzeSentimentOptions,
   ExtractKeyPhrasesOptions,
-  RecognizePiiEntitiesOptions,
   RecognizeLinkedEntitiesOptions,
   TextAnalyticsOperationOptions
 } from "./textAnalyticsClient";
-export { CognitiveServicesCredential } from "./cognitiveServicesCredential";
 export {
   DetectLanguageResult,
   DetectLanguageErrorResult,
   DetectLanguageSuccessResult
 } from "./detectLanguageResult";
-export { DetectLanguageResultCollection } from "./detectLanguageResultCollection";
+export { DetectLanguageResultArray } from "./detectLanguageResultArray";
 export {
-  RecognizeEntitiesResult,
-  RecognizeEntitiesErrorResult,
-  RecognizeEntitiesSuccessResult
-} from "./recognizeEntitiesResult";
-export { RecognizeEntitiesResultCollection } from "./recognizeEntitiesResultCollection";
+  CategorizedEntity,
+  RecognizeCategorizedEntitiesResult,
+  RecognizeCategorizedEntitiesErrorResult,
+  RecognizeCategorizedEntitiesSuccessResult
+} from "./recognizeCategorizedEntitiesResult";
+export { RecognizeCategorizedEntitiesResultArray } from "./recognizeCategorizedEntitiesResultArray";
 export {
   AnalyzeSentimentResult,
   AnalyzeSentimentErrorResult,
   AnalyzeSentimentSuccessResult
 } from "./analyzeSentimentResult";
-export { AnalyzeSentimentResultCollection } from "./analyzeSentimentResultCollection";
+export { AnalyzeSentimentResultArray } from "./analyzeSentimentResultArray";
 export {
   ExtractKeyPhrasesResult,
   ExtractKeyPhrasesErrorResult,
   ExtractKeyPhrasesSuccessResult
 } from "./extractKeyPhrasesResult";
-export { ExtractKeyPhrasesResultCollection } from "./extractKeyPhrasesResultCollection";
+export { ExtractKeyPhrasesResultArray } from "./extractKeyPhrasesResultArray";
 export {
   RecognizeLinkedEntitiesResult,
   RecognizeLinkedEntitiesErrorResult,
   RecognizeLinkedEntitiesSuccessResult
 } from "./recognizeLinkedEntitiesResult";
-export { RecognizeLinkedEntitiesResultCollection } from "./recognizeLinkedEntitiesResultCollection";
+export { RecognizeLinkedEntitiesResultArray } from "./recognizeLinkedEntitiesResultArray";
 export {
   TextAnalyticsResult,
+  ErrorCode,
+  TextAnalyticsError,
   TextAnalyticsErrorResult,
   TextAnalyticsSuccessResult
 } from "./textAnalyticsResult";
@@ -53,18 +56,18 @@ export {
 export {
   DetectedLanguage,
   TextDocumentStatistics,
-  SentimentConfidenceScorePerLabel,
-  MultiLanguageInput as TextDocumentInput,
-  LanguageInput as DetectLanguageInput,
-  TextAnalyticsError,
+  SentimentConfidenceScores,
+  TextDocumentInput,
+  DetectLanguageInput,
   TextDocumentBatchStatistics,
-  InnerErrorCodeValue,
-  ErrorCodeValue,
-  InnerError,
   Entity,
   SentenceSentiment,
-  DocumentSentimentValue,
-  SentenceSentimentValue,
+  DocumentSentimentLabel,
+  SentenceSentimentLabel,
+  ErrorCodeValue,
+  InnerErrorCodeValue,
+  WarningCode,
   LinkedEntity,
-  Match
+  Match,
+  TextAnalyticsWarning
 } from "./generated/models";

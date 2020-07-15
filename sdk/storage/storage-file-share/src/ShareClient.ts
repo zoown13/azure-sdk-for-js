@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { HttpResponse, isNode } from "@azure/core-http";
-import { CanonicalCode } from "@opentelemetry/types";
+import { CanonicalCode } from "@opentelemetry/api";
 import { AbortSignalLike } from "@azure/abort-controller";
 import {
   DeleteSnapshotsOptionType,
@@ -45,7 +45,6 @@ import { Credential } from "./credentials/Credential";
 import { StorageSharedKeyCredential } from "./credentials/StorageSharedKeyCredential";
 import { AnonymousCredential } from "./credentials/AnonymousCredential";
 import { createSpan } from "./utils/tracing";
-import { getCachedDefaultHttpClient } from "./utils/cache";
 
 /**
  * Options to configure the {@link ShareClient.create} operation.
@@ -153,6 +152,23 @@ export interface ShareGetAccessPolicyOptions extends CommonOptions {
    *
    * @type {AbortSignalLike}
    * @memberof ShareGetAccessPolicyOptions
+   */
+  abortSignal?: AbortSignalLike;
+}
+
+/**
+ * Options to configure the {@link ShareClient.exists} operation.
+ *
+ * @export
+ * @interface ShareExistsOptions
+ */
+export interface ShareExistsOptions extends CommonOptions {
+  /**
+   * An implementation of the `AbortSignalLike` interface to signal the request to cancel the operation.
+   * For example, use the &commat;azure/abort-controller to create an `AbortSignal`.
+   *
+   * @type {AbortSignalLike}
+   * @memberof ShareExistsOptions
    */
   abortSignal?: AbortSignalLike;
 }
@@ -338,6 +354,38 @@ export type ShareGetStatisticsResponse = ShareGetStatisticsResponseModel & {
 };
 
 /**
+ * Contains response data for the {@link ShareClient.createIfNotExists} operation.
+ *
+ * @export
+ * @interface ShareCreateIfNotExistsResponse
+ */
+export interface ShareCreateIfNotExistsResponse extends ShareCreateResponse {
+  /**
+   * Indicate whether the share is successfully created. Is false when the share is not changed as it already exists.
+   *
+   * @type {boolean}
+   * @memberof ShareCreateIfNotExistsResponse
+   */
+  succeeded: boolean;
+}
+
+/**
+ * Contains response data for the {@link ShareClient.deleteIfExists} operation.
+ *
+ * @export
+ * @interface ShareDeleteIfExistsResponse
+ */
+export interface ShareDeleteIfExistsResponse extends ShareDeleteResponse {
+  /**
+   * Indicate whether the share is successfully deleted. Is false if the share does not exist in the first place.
+   *
+   * @type {boolean}
+   * @memberof ShareDeleteIfExistsResponse
+   */
+  succeeded: boolean;
+}
+
+/**
  * A ShareClient represents a URL to the Azure Storage share allowing you to manipulate its directories and files.
  *
  * @export
@@ -407,12 +455,6 @@ export class ShareClient extends StorageClient {
     credentialOrPipelineOrShareName?: Credential | Pipeline | string,
     options?: StoragePipelineOptions
   ) {
-    // when options.httpClient is not specified, passing in a DefaultHttpClient instance to
-    // avoid each client creating its own http client.
-    const newOptions: StoragePipelineOptions = {
-      httpClient: getCachedDefaultHttpClient(),
-      ...options
-    };
     let pipeline: Pipeline;
     let url: string;
     if (credentialOrPipelineOrShareName instanceof Pipeline) {
@@ -422,7 +464,7 @@ export class ShareClient extends StorageClient {
     } else if (credentialOrPipelineOrShareName instanceof Credential) {
       // (url: string, credential?: Credential, options?: StoragePipelineOptions)
       url = urlOrConnectionString;
-      pipeline = newPipeline(credentialOrPipelineOrShareName, newOptions);
+      pipeline = newPipeline(credentialOrPipelineOrShareName, options);
     } else if (
       !credentialOrPipelineOrShareName &&
       typeof credentialOrPipelineOrShareName !== "string"
@@ -430,7 +472,7 @@ export class ShareClient extends StorageClient {
       // (url: string, credential?: Credential, options?: StoragePipelineOptions)
       // The second parameter is undefined. Use anonymous credential.
       url = urlOrConnectionString;
-      pipeline = newPipeline(new AnonymousCredential(), newOptions);
+      pipeline = newPipeline(new AnonymousCredential(), options);
     } else if (
       credentialOrPipelineOrShareName &&
       typeof credentialOrPipelineOrShareName === "string"
@@ -445,13 +487,13 @@ export class ShareClient extends StorageClient {
             extractedCreds.accountKey
           );
           url = appendToURLPath(extractedCreds.url, name);
-          pipeline = newPipeline(sharedKeyCredential, newOptions);
+          pipeline = newPipeline(sharedKeyCredential, options);
         } else {
           throw new Error("Account connection string is only supported in Node.js environment");
         }
       } else if (extractedCreds.kind === "SASConnString") {
         url = appendToURLPath(extractedCreds.url, name) + "?" + extractedCreds.accountSas;
-        pipeline = newPipeline(new AnonymousCredential(), newOptions);
+        pipeline = newPipeline(new AnonymousCredential(), options);
       } else {
         throw new Error(
           "Connection string must be either an Account connection string or a SAS connection string"
@@ -501,6 +543,53 @@ export class ShareClient extends StorageClient {
         spanOptions
       });
     } catch (e) {
+      span.setStatus({
+        code: CanonicalCode.UNKNOWN,
+        message: e.message
+      });
+      throw e;
+    } finally {
+      span.end();
+    }
+  }
+
+  /**
+   * Creates a new share under the specified account. If the share with
+   * the same name already exists, it is not changed.
+   * @see https://docs.microsoft.com/en-us/rest/api/storageservices/create-share
+   *
+   * @param {ShareCreateOptions} [options]
+   * @returns {Promise<ShareCreateIfNotExistsResponse>}
+   * @memberof ShareClient
+   */
+  public async createIfNotExists(
+    options: ShareCreateOptions = {}
+  ): Promise<ShareCreateIfNotExistsResponse> {
+    const { span, spanOptions } = createSpan(
+      "ShareClient-createIfNotExists",
+      options.tracingOptions
+    );
+    try {
+      const res = await this.create({
+        ...options,
+        tracingOptions: { ...options!.tracingOptions, spanOptions }
+      });
+      return {
+        succeeded: true,
+        ...res
+      };
+    } catch (e) {
+      if (e.details?.errorCode === "ShareAlreadyExists") {
+        span.setStatus({
+          code: CanonicalCode.ALREADY_EXISTS,
+          message: "Expected exception when creating a share only if it doesn't already exist."
+        });
+        return {
+          succeeded: false,
+          ...e.response?.parsedHeaders,
+          _response: e.response
+        };
+      }
       span.setStatus({
         code: CanonicalCode.UNKNOWN,
         message: e.message
@@ -691,6 +780,43 @@ export class ShareClient extends StorageClient {
   }
 
   /**
+   * Returns true if the Azrue share resource represented by this client exists; false otherwise.
+   *
+   * NOTE: use this function with care since an existing share might be deleted by other clients or
+   * applications. Vice versa new shares might be added by other clients or applications after this
+   * function completes.
+   *
+   * @param {ShareExistsOptions} [options] options to Exists operation.
+   * @returns {Promise<boolean>}
+   * @memberof ShareClient
+   */
+  public async exists(options: ShareExistsOptions = {}): Promise<boolean> {
+    const { span, spanOptions } = createSpan("ShareClient-exists", options.tracingOptions);
+    try {
+      await this.getProperties({
+        abortSignal: options.abortSignal,
+        tracingOptions: { ...options.tracingOptions, spanOptions }
+      });
+      return true;
+    } catch (e) {
+      if (e.statusCode === 404) {
+        span.setStatus({
+          code: CanonicalCode.NOT_FOUND,
+          message: "Expected exception when checking share existence"
+        });
+        return false;
+      }
+      span.setStatus({
+        code: CanonicalCode.UNKNOWN,
+        message: e.message
+      });
+      throw e;
+    } finally {
+      span.end();
+    }
+  }
+
+  /**
    * Returns all user-defined metadata and system properties for the specified
    * share.
    * @see https://docs.microsoft.com/en-us/rest/api/storageservices/get-share-properties
@@ -740,6 +866,50 @@ export class ShareClient extends StorageClient {
         spanOptions
       });
     } catch (e) {
+      span.setStatus({
+        code: CanonicalCode.UNKNOWN,
+        message: e.message
+      });
+      throw e;
+    } finally {
+      span.end();
+    }
+  }
+
+  /**
+   * Marks the specified share for deletion if it exists. The share and any directories or files
+   * contained within it are later deleted during garbage collection.
+   * @see https://docs.microsoft.com/en-us/rest/api/storageservices/delete-share
+   *
+   * @param {ShareDeleteMethodOptions} [options]
+   * @returns {Promise<ShareDeleteIfExistsResponse>}
+   * @memberof ShareClient
+   */
+  public async deleteIfExists(
+    options: ShareDeleteMethodOptions = {}
+  ): Promise<ShareDeleteIfExistsResponse> {
+    const { span, spanOptions } = createSpan("ShareClient-deleteIfExists", options.tracingOptions);
+    try {
+      const res = await this.delete({
+        ...options,
+        tracingOptions: { ...options!.tracingOptions, spanOptions }
+      });
+      return {
+        succeeded: true,
+        ...res
+      };
+    } catch (e) {
+      if (e.details?.errorCode === "ShareNotFound") {
+        span.setStatus({
+          code: CanonicalCode.NOT_FOUND,
+          message: "Expected exception when deleting a share only if it exists."
+        });
+        return {
+          succeeded: false,
+          ...e.response?.parsedHeaders,
+          _response: e.response
+        };
+      }
       span.setStatus({
         code: CanonicalCode.UNKNOWN,
         message: e.message
@@ -847,6 +1017,10 @@ export class ShareClient extends StorageClient {
    * When you set permissions for a share, the existing permissions are replaced.
    * If no shareAcl provided, the existing share ACL will be
    * removed.
+   *
+   * When you establish a stored access policy on a share, it may take up to 30 seconds to take effect.
+   * During this interval, a shared access signature that is associated with the stored access policy will
+   * fail with status code 403 (Forbidden), until the access policy becomes active.
    * @see https://docs.microsoft.com/en-us/rest/api/storageservices/set-share-acl
    *
    * @param {SignedIdentifier[]} [shareAcl] Array of signed identifiers, each having a unique Id and details of access policy.

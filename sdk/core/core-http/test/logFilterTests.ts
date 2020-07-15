@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+// Licensed under the MIT license.
 
 import { assert } from "chai";
-import { HttpHeaders, RawHttpHeaders } from "../lib/httpHeaders";
-import { HttpOperationResponse } from "../lib/httpOperationResponse";
-import { LogPolicy, LogPolicyOptions } from "../lib/policies/logPolicy";
-import { RequestPolicy, RequestPolicyOptions } from "../lib/policies/requestPolicy";
-import { WebResource } from "../lib/webResource";
+import { HttpHeaders, RawHttpHeaders } from "../src/httpHeaders";
+import { HttpOperationResponse } from "../src/httpOperationResponse";
+import { LogPolicy, LogPolicyOptions } from "../src/policies/logPolicy";
+import { RequestPolicy, RequestPolicyOptions } from "../src/policies/requestPolicy";
+import { WebResource } from "../src/webResource";
 import { getLogLevel, setLogLevel, AzureLogLevel, Debugger } from "@azure/logger";
 
 function getNextPolicy(responseHeaders?: RawHttpHeaders): RequestPolicy {
@@ -40,7 +40,9 @@ function assertLog(
     destroy: () => true,
     namespace: "test",
     extend: () => logger,
-    log: () => {}
+    log: () => {
+      // Nothing to do here.
+    }
   });
 
   const options: LogPolicyOptions = {
@@ -53,8 +55,9 @@ function assertLog(
 
   lf.sendRequest(request)
     .then(() => {
-      assert.deepEqual(output, expectedLog);
+      assert.equal(output, expectedLog);
       doneCallback();
+      return;
     })
     .catch((err: Error) => {
       doneCallback(err);

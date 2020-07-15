@@ -316,6 +316,16 @@ export interface KeyVaultProperties {
    * The Uri of KeyVault.
    */
   keyVaultUri?: string;
+  /**
+   * The object identifier of the current versioned Key Vault Key in use.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly currentVersionedKeyIdentifier?: string;
+  /**
+   * Timestamp of last rotation of the Key Vault Key.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly lastKeyRotationTimestamp?: Date;
 }
 
 /**
@@ -706,6 +716,63 @@ export interface GeoReplicationStats {
 }
 
 /**
+ * Blob range
+ */
+export interface BlobRestoreRange {
+  /**
+   * Blob start range. This is inclusive. Empty means account start.
+   */
+  startRange: string;
+  /**
+   * Blob end range. This is exclusive. Empty means account end.
+   */
+  endRange: string;
+}
+
+/**
+ * Blob restore parameters
+ */
+export interface BlobRestoreParameters {
+  /**
+   * Restore blob to the specified time.
+   */
+  timeToRestore: Date;
+  /**
+   * Blob ranges to restore.
+   */
+  blobRanges: BlobRestoreRange[];
+}
+
+/**
+ * Blob restore status.
+ */
+export interface BlobRestoreStatus {
+  /**
+   * The status of blob restore progress. Possible values are: - InProgress: Indicates that blob
+   * restore is ongoing. - Complete: Indicates that blob restore has been completed successfully. -
+   * Failed: Indicates that blob restore is failed. Possible values include: 'InProgress',
+   * 'Complete', 'Failed'
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly status?: BlobRestoreProgressStatus;
+  /**
+   * Failure reason when blob restore is failed.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly failureReason?: string;
+  /**
+   * Id for tracking blob restore request.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly restoreId?: string;
+  /**
+   * Blob restore request parameters.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly parameters?: BlobRestoreParameters;
+}
+
+/**
  * The Private Endpoint resource.
  */
 export interface PrivateEndpoint {
@@ -924,6 +991,11 @@ export interface StorageAccount extends TrackedResource {
    * Maintains information about the network routing choice opted by the user for data transfer
    */
   routingPreference?: RoutingPreference;
+  /**
+   * Blob restore status
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly blobRestoreStatus?: BlobRestoreStatus;
 }
 
 /**
@@ -1290,6 +1362,26 @@ export interface ManagementPolicyAction {
 }
 
 /**
+ * Blob index tag based filtering for blob objects
+ */
+export interface TagFilter {
+  /**
+   * This is the filter tag name, it can have 1 - 128 characters
+   */
+  name: string;
+  /**
+   * This is the comparison operator which is used for object comparison and filtering. Only ==
+   * (equality operator) is currently supported
+   */
+  op: string;
+  /**
+   * This is the filter tag value field used for tag based filtering, it can have 0 - 256
+   * characters
+   */
+  value: string;
+}
+
+/**
  * Filters limit rule actions to a subset of blobs within the storage account. If multiple filters
  * are defined, a logical AND is performed on all filters.
  */
@@ -1302,6 +1394,10 @@ export interface ManagementPolicyFilter {
    * An array of predefined enum values. Only blockBlob is supported.
    */
   blobTypes: string[];
+  /**
+   * An array of blob index tag based filters, there can be at most 10 tag filters
+   */
+  blobIndexMatch?: TagFilter[];
 }
 
 /**
@@ -1397,6 +1493,120 @@ export interface PrivateLinkResourceListResult {
 }
 
 /**
+ * The key vault properties for the encryption scope. This is a required field if encryption scope
+ * 'source' attribute is set to 'Microsoft.KeyVault'.
+ */
+export interface EncryptionScopeKeyVaultProperties {
+  /**
+   * The object identifier for a key vault key object. When applied, the encryption scope will use
+   * the key referenced by the identifier to enable customer-managed key support on this encryption
+   * scope.
+   */
+  keyUri?: string;
+}
+
+/**
+ * The Encryption Scope resource.
+ */
+export interface EncryptionScope extends Resource {
+  /**
+   * The provider for the encryption scope. Possible values (case-insensitive):  Microsoft.Storage,
+   * Microsoft.KeyVault. Possible values include: 'Microsoft.Storage', 'Microsoft.KeyVault'
+   */
+  source?: EncryptionScopeSource;
+  /**
+   * The state of the encryption scope. Possible values (case-insensitive):  Enabled, Disabled.
+   * Possible values include: 'Enabled', 'Disabled'
+   */
+  state?: EncryptionScopeState;
+  /**
+   * Gets the creation date and time of the encryption scope in UTC.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly creationTime?: Date;
+  /**
+   * Gets the last modification date and time of the encryption scope in UTC.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly lastModifiedTime?: Date;
+  /**
+   * The key vault properties for the encryption scope. This is a required field if encryption
+   * scope 'source' attribute is set to 'Microsoft.KeyVault'.
+   */
+  keyVaultProperties?: EncryptionScopeKeyVaultProperties;
+}
+
+/**
+ * Filters limit replication to a subset of blobs within the storage account. A logical OR is
+ * performed on values in the filter. If multiple filters are defined, a logical AND is performed
+ * on all filters.
+ */
+export interface ObjectReplicationPolicyFilter {
+  /**
+   * Optional. Filters the results to replicate only blobs whose names begin with the specified
+   * prefix.
+   */
+  prefixMatch?: string[];
+  /**
+   * Blobs created after the time will be replicated to the destination. It must be in datetime
+   * format 'yyyy-MM-ddTHH:mm:ssZ'. Example: 2020-02-19T16:05:00Z
+   */
+  minCreationTime?: string;
+}
+
+/**
+ * The replication policy rule between two containers.
+ */
+export interface ObjectReplicationPolicyRule {
+  /**
+   * Rule Id is auto-generated for each new rule on destination account. It is required for put
+   * policy on source account.
+   */
+  ruleId?: string;
+  /**
+   * Required. Source container name.
+   */
+  sourceContainer: string;
+  /**
+   * Required. Destination container name.
+   */
+  destinationContainer: string;
+  /**
+   * Optional. An object that defines the filter set.
+   */
+  filters?: ObjectReplicationPolicyFilter;
+}
+
+/**
+ * The replication policy between two storage accounts. Multiple rules can be defined in one
+ * policy.
+ */
+export interface ObjectReplicationPolicy extends Resource {
+  /**
+   * A unique id for object replication policy.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly policyId?: string;
+  /**
+   * Indicates when the policy is enabled on the source account.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly enabledTime?: Date;
+  /**
+   * Required. Source account name.
+   */
+  sourceAccount: string;
+  /**
+   * Required. Destination account name.
+   */
+  destinationAccount: string;
+  /**
+   * The storage account object replication rules.
+   */
+  rules?: ObjectReplicationPolicyRule[];
+}
+
+/**
  * An error response from the storage resource provider.
  */
 export interface ErrorResponse {
@@ -1473,13 +1683,20 @@ export interface ImmutabilityPolicyProperties {
   /**
    * The immutability period for the blobs in the container since the policy creation, in days.
    */
-  immutabilityPeriodSinceCreationInDays: number;
+  immutabilityPeriodSinceCreationInDays?: number;
   /**
    * The ImmutabilityPolicy state of a blob container, possible values include: Locked and
    * Unlocked. Possible values include: 'Locked', 'Unlocked'
    * **NOTE: This property will not be serialized. It can only be populated by the server.**
    */
   readonly state?: ImmutabilityPolicyState;
+  /**
+   * This property can only be changed for unlocked time-based retention policies. When enabled,
+   * new blocks can be written to an append blob while maintaining immutability protection and
+   * compliance. Only new blocks can be added and any existing blocks cannot be modified or
+   * deleted. This property cannot be changed with ExtendImmutabilityPolicy API
+   */
+  allowProtectedAppendWrites?: boolean;
   /**
    * ImmutabilityPolicy Etag.
    * **NOTE: This property will not be serialized. It can only be populated by the server.**
@@ -1546,6 +1763,14 @@ export interface LegalHoldProperties {
  */
 export interface BlobContainer extends AzureEntityResource {
   /**
+   * Default the container to use specified encryption scope for all writes.
+   */
+  defaultEncryptionScope?: string;
+  /**
+   * Block override of encryption scope from the container default.
+   */
+  denyEncryptionScopeOverride?: boolean;
+  /**
    * Specifies whether data in the container may be accessed publicly and the level of access.
    * Possible values include: 'Container', 'Blob', 'None'
    */
@@ -1611,13 +1836,20 @@ export interface ImmutabilityPolicy extends AzureEntityResource {
   /**
    * The immutability period for the blobs in the container since the policy creation, in days.
    */
-  immutabilityPeriodSinceCreationInDays: number;
+  immutabilityPeriodSinceCreationInDays?: number;
   /**
    * The ImmutabilityPolicy state of a blob container, possible values include: Locked and
    * Unlocked. Possible values include: 'Locked', 'Unlocked'
    * **NOTE: This property will not be serialized. It can only be populated by the server.**
    */
   readonly state?: ImmutabilityPolicyState;
+  /**
+   * This property can only be changed for unlocked time-based retention policies. When enabled,
+   * new blocks can be written to an append blob while maintaining immutability protection and
+   * compliance. Only new blocks can be added and any existing blocks cannot be modified or
+   * deleted. This property cannot be changed with ExtendImmutabilityPolicy API
+   */
+  allowProtectedAppendWrites?: boolean;
 }
 
 /**
@@ -1642,6 +1874,14 @@ export interface LegalHold {
  * The blob container properties be listed out.
  */
 export interface ListContainerItem extends AzureEntityResource {
+  /**
+   * Default the container to use specified encryption scope for all writes.
+   */
+  defaultEncryptionScope?: string;
+  /**
+   * Block override of encryption scope from the container default.
+   */
+  denyEncryptionScopeOverride?: boolean;
   /**
    * Specifies whether data in the container may be accessed publicly and the level of access.
    * Possible values include: 'Container', 'Blob', 'None'
@@ -1766,6 +2006,26 @@ export interface ChangeFeed {
 }
 
 /**
+ * The blob service properties for blob restore policy
+ */
+export interface RestorePolicyProperties {
+  /**
+   * Blob restore is enabled if set to true.
+   */
+  enabled: boolean;
+  /**
+   * how long this blob can be restored. It should be great than zero and less than
+   * DeleteRetentionPolicy.days.
+   */
+  days?: number;
+  /**
+   * Returns the date and time the restore policy was last enabled.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly lastEnabledTime?: Date;
+}
+
+/**
  * The properties of a storage account’s Blob service.
  */
 export interface BlobServiceProperties extends Resource {
@@ -1786,13 +2046,25 @@ export interface BlobServiceProperties extends Resource {
    */
   deleteRetentionPolicy?: DeleteRetentionPolicy;
   /**
-   * Automatic Snapshot is enabled if set to true.
+   * Versioning is enabled if set to true.
+   */
+  isVersioningEnabled?: boolean;
+  /**
+   * Deprecated in favor of isVersioningEnabled property.
    */
   automaticSnapshotPolicyEnabled?: boolean;
   /**
    * The blob service properties for change feed events.
    */
   changeFeed?: ChangeFeed;
+  /**
+   * The blob service properties for blob restore policy.
+   */
+  restorePolicy?: RestorePolicyProperties;
+  /**
+   * The blob service properties for container soft delete.
+   */
+  containerDeleteRetentionPolicy?: DeleteRetentionPolicy;
   /**
    * Sku name and tier.
    * **NOTE: This property will not be serialized. It can only be populated by the server.**
@@ -1894,6 +2166,72 @@ export interface FileShare extends AzureEntityResource {
    * 5TB (5120). For Large File Shares, the maximum size is 102400.
    */
   shareQuota?: number;
+  /**
+   * The authentication protocol that is used for the file share. Can only be specified when
+   * creating a share. Possible values include: 'SMB', 'NFS'
+   */
+  enabledProtocols?: EnabledProtocols;
+  /**
+   * The property is for NFS share only. The default is NoRootSquash. Possible values include:
+   * 'NoRootSquash', 'RootSquash', 'AllSquash'
+   */
+  rootSquash?: RootSquashType;
+  /**
+   * The version of the share.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly version?: string;
+  /**
+   * Indicates whether the share was deleted.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly deleted?: boolean;
+  /**
+   * The deleted time if the share was deleted.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly deletedTime?: Date;
+  /**
+   * Remaining retention days for share that was soft deleted.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly remainingRetentionDays?: number;
+  /**
+   * Access tier for specific share. GpV2 account can choose between TransactionOptimized
+   * (default), Hot, and Cool. FileStorage account can choose Premium. Possible values include:
+   * 'TransactionOptimized', 'Hot', 'Cool', 'Premium'
+   */
+  accessTier?: ShareAccessTier;
+  /**
+   * Indicates the last modification time for share access tier.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly accessTierChangeTime?: Date;
+  /**
+   * Indicates if there is a pending transition for access tier.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly accessTierStatus?: string;
+  /**
+   * The approximate size of the data stored on the share. Note that this value may not include all
+   * recently created or recently resized files.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly shareUsageBytes?: number;
+}
+
+/**
+ * The deleted share to be restored.
+ */
+export interface DeletedShare {
+  /**
+   * Required. Identify the name of the deleted share that will be restored.
+   */
+  deletedShareName: string;
+  /**
+   * Required. Identify the version of the deleted share that will be restored.
+   */
+  deletedShareVersion: string;
 }
 
 /**
@@ -1914,6 +2252,58 @@ export interface FileShareItem extends AzureEntityResource {
    * 5TB (5120). For Large File Shares, the maximum size is 102400.
    */
   shareQuota?: number;
+  /**
+   * The authentication protocol that is used for the file share. Can only be specified when
+   * creating a share. Possible values include: 'SMB', 'NFS'
+   */
+  enabledProtocols?: EnabledProtocols;
+  /**
+   * The property is for NFS share only. The default is NoRootSquash. Possible values include:
+   * 'NoRootSquash', 'RootSquash', 'AllSquash'
+   */
+  rootSquash?: RootSquashType;
+  /**
+   * The version of the share.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly version?: string;
+  /**
+   * Indicates whether the share was deleted.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly deleted?: boolean;
+  /**
+   * The deleted time if the share was deleted.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly deletedTime?: Date;
+  /**
+   * Remaining retention days for share that was soft deleted.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly remainingRetentionDays?: number;
+  /**
+   * Access tier for specific share. GpV2 account can choose between TransactionOptimized
+   * (default), Hot, and Cool. FileStorage account can choose Premium. Possible values include:
+   * 'TransactionOptimized', 'Hot', 'Cool', 'Premium'
+   */
+  accessTier?: ShareAccessTier;
+  /**
+   * Indicates the last modification time for share access tier.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly accessTierChangeTime?: Date;
+  /**
+   * Indicates if there is a pending transition for access tier.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly accessTierStatus?: string;
+  /**
+   * The approximate size of the data stored on the share. Note that this value may not include all
+   * recently created or recently resized files.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly shareUsageBytes?: number;
 }
 
 /**
@@ -1922,8 +2312,8 @@ export interface FileShareItem extends AzureEntityResource {
 export interface StorageAccountsGetPropertiesOptionalParams extends msRest.RequestOptionsBase {
   /**
    * May be used to expand the properties within account's properties. By default, data is not
-   * included when fetching properties. Currently we only support geoReplicationStats. Possible
-   * values include: 'geoReplicationStats'
+   * included when fetching properties. Currently we only support geoReplicationStats and
+   * blobRestoreStatus. Possible values include: 'geoReplicationStats', 'blobRestoreStatus'
    */
   expand?: StorageAccountExpand;
 }
@@ -1956,36 +2346,6 @@ export interface BlobContainersListOptionalParams extends msRest.RequestOptionsB
 /**
  * Optional Parameters.
  */
-export interface BlobContainersCreateOptionalParams extends msRest.RequestOptionsBase {
-  /**
-   * Specifies whether data in the container may be accessed publicly and the level of access.
-   * Possible values include: 'Container', 'Blob', 'None'
-   */
-  publicAccess?: PublicAccess;
-  /**
-   * A name-value pair to associate with the container as metadata.
-   */
-  metadata?: { [propertyName: string]: string };
-}
-
-/**
- * Optional Parameters.
- */
-export interface BlobContainersUpdateOptionalParams extends msRest.RequestOptionsBase {
-  /**
-   * Specifies whether data in the container may be accessed publicly and the level of access.
-   * Possible values include: 'Container', 'Blob', 'None'
-   */
-  publicAccess?: PublicAccess;
-  /**
-   * A name-value pair to associate with the container as metadata.
-   */
-  metadata?: { [propertyName: string]: string };
-}
-
-/**
- * Optional Parameters.
- */
 export interface BlobContainersCreateOrUpdateImmutabilityPolicyOptionalParams extends msRest.RequestOptionsBase {
   /**
    * The entity state (ETag) version of the immutability policy to update. A value of "*" can be
@@ -1993,6 +2353,17 @@ export interface BlobContainersCreateOrUpdateImmutabilityPolicyOptionalParams ex
    * operation will always be applied.
    */
   ifMatch?: string;
+  /**
+   * The immutability period for the blobs in the container since the policy creation, in days.
+   */
+  immutabilityPeriodSinceCreationInDays?: number;
+  /**
+   * This property can only be changed for unlocked time-based retention policies. When enabled,
+   * new blocks can be written to an append blob while maintaining immutability protection and
+   * compliance. Only new blocks can be added and any existing blocks cannot be modified or
+   * deleted. This property cannot be changed with ExtendImmutabilityPolicy API
+   */
+  allowProtectedAppendWrites?: boolean;
 }
 
 /**
@@ -2005,6 +2376,23 @@ export interface BlobContainersGetImmutabilityPolicyOptionalParams extends msRes
    * operation will always be applied.
    */
   ifMatch?: string;
+}
+
+/**
+ * Optional Parameters.
+ */
+export interface BlobContainersExtendImmutabilityPolicyOptionalParams extends msRest.RequestOptionsBase {
+  /**
+   * The immutability period for the blobs in the container since the policy creation, in days.
+   */
+  immutabilityPeriodSinceCreationInDays?: number;
+  /**
+   * This property can only be changed for unlocked time-based retention policies. When enabled,
+   * new blocks can be written to an append blob while maintaining immutability protection and
+   * compliance. Only new blocks can be added and any existing blocks cannot be modified or
+   * deleted. This property cannot be changed with ExtendImmutabilityPolicy API
+   */
+  allowProtectedAppendWrites?: boolean;
 }
 
 /**
@@ -2045,36 +2433,22 @@ export interface FileSharesListOptionalParams extends msRest.RequestOptionsBase 
    * Optional. When specified, only share names starting with the filter will be listed.
    */
   filter?: string;
+  /**
+   * Optional, used to expand the properties within share's properties. Possible values include:
+   * 'deleted'
+   */
+  expand?: ListSharesExpand;
 }
 
 /**
  * Optional Parameters.
  */
-export interface FileSharesCreateOptionalParams extends msRest.RequestOptionsBase {
+export interface FileSharesGetOptionalParams extends msRest.RequestOptionsBase {
   /**
-   * A name-value pair to associate with the share as metadata.
+   * Optional, used to expand the properties within share's properties. Possible values include:
+   * 'stats'
    */
-  metadata?: { [propertyName: string]: string };
-  /**
-   * The maximum size of the share, in gigabytes. Must be greater than 0, and less than or equal to
-   * 5TB (5120). For Large File Shares, the maximum size is 102400.
-   */
-  shareQuota?: number;
-}
-
-/**
- * Optional Parameters.
- */
-export interface FileSharesUpdateOptionalParams extends msRest.RequestOptionsBase {
-  /**
-   * A name-value pair to associate with the share as metadata.
-   */
-  metadata?: { [propertyName: string]: string };
-  /**
-   * The maximum size of the share, in gigabytes. Must be greater than 0, and less than or equal to
-   * 5TB (5120). For Large File Shares, the maximum size is 102400.
-   */
-  shareQuota?: number;
+  expand?: GetShareExpand;
 }
 
 /**
@@ -2181,6 +2555,37 @@ export interface StorageAccountListResult extends Array<StorageAccount> {
  * @extends Array<Usage>
  */
 export interface UsageListResult extends Array<Usage> {
+}
+
+/**
+ * @interface
+ * List of private endpoint connection associated with the specified storage account
+ * @extends Array<PrivateEndpointConnection>
+ */
+export interface PrivateEndpointConnectionListResult extends Array<PrivateEndpointConnection> {
+}
+
+/**
+ * @interface
+ * List storage account object replication policies.
+ * @extends Array<ObjectReplicationPolicy>
+ */
+export interface ObjectReplicationPolicies extends Array<ObjectReplicationPolicy> {
+}
+
+/**
+ * @interface
+ * List of encryption scopes requested, and if paging is required, a URL to the next page of
+ * encryption scopes.
+ * @extends Array<EncryptionScope>
+ */
+export interface EncryptionScopeListResult extends Array<EncryptionScope> {
+  /**
+   * Request URL that can be used to query next page of encryption scopes. Returned when total
+   * number of requested encryption scopes exceeds the maximum page size.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly nextLink?: string;
 }
 
 /**
@@ -2353,6 +2758,14 @@ export type RoutingChoice = 'MicrosoftRouting' | 'InternetRouting';
 export type GeoReplicationStatus = 'Live' | 'Bootstrap' | 'Unavailable';
 
 /**
+ * Defines values for BlobRestoreProgressStatus.
+ * Possible values include: 'InProgress', 'Complete', 'Failed'
+ * @readonly
+ * @enum {string}
+ */
+export type BlobRestoreProgressStatus = 'InProgress' | 'Complete' | 'Failed';
+
+/**
  * Defines values for ProvisioningState.
  * Possible values include: 'Creating', 'ResolvingDNS', 'Succeeded'
  * @readonly
@@ -2442,6 +2855,22 @@ export type HttpProtocol = 'https,http' | 'https';
 export type SignedResource = 'b' | 'c' | 'f' | 's';
 
 /**
+ * Defines values for EncryptionScopeSource.
+ * Possible values include: 'Microsoft.Storage', 'Microsoft.KeyVault'
+ * @readonly
+ * @enum {string}
+ */
+export type EncryptionScopeSource = 'Microsoft.Storage' | 'Microsoft.KeyVault';
+
+/**
+ * Defines values for EncryptionScopeState.
+ * Possible values include: 'Enabled', 'Disabled'
+ * @readonly
+ * @enum {string}
+ */
+export type EncryptionScopeState = 'Enabled' | 'Disabled';
+
+/**
  * Defines values for PublicAccess.
  * Possible values include: 'Container', 'Blob', 'None'
  * @readonly
@@ -2490,12 +2919,36 @@ export type ImmutabilityPolicyState = 'Locked' | 'Unlocked';
 export type ImmutabilityPolicyUpdateType = 'put' | 'lock' | 'extend';
 
 /**
- * Defines values for StorageAccountExpand.
- * Possible values include: 'geoReplicationStats'
+ * Defines values for EnabledProtocols.
+ * Possible values include: 'SMB', 'NFS'
  * @readonly
  * @enum {string}
  */
-export type StorageAccountExpand = 'geoReplicationStats';
+export type EnabledProtocols = 'SMB' | 'NFS';
+
+/**
+ * Defines values for RootSquashType.
+ * Possible values include: 'NoRootSquash', 'RootSquash', 'AllSquash'
+ * @readonly
+ * @enum {string}
+ */
+export type RootSquashType = 'NoRootSquash' | 'RootSquash' | 'AllSquash';
+
+/**
+ * Defines values for ShareAccessTier.
+ * Possible values include: 'TransactionOptimized', 'Hot', 'Cool', 'Premium'
+ * @readonly
+ * @enum {string}
+ */
+export type ShareAccessTier = 'TransactionOptimized' | 'Hot' | 'Cool' | 'Premium';
+
+/**
+ * Defines values for StorageAccountExpand.
+ * Possible values include: 'geoReplicationStats', 'blobRestoreStatus'
+ * @readonly
+ * @enum {string}
+ */
+export type StorageAccountExpand = 'geoReplicationStats' | 'blobRestoreStatus';
 
 /**
  * Defines values for ListKeyExpand.
@@ -2504,6 +2957,22 @@ export type StorageAccountExpand = 'geoReplicationStats';
  * @enum {string}
  */
 export type ListKeyExpand = 'kerb';
+
+/**
+ * Defines values for ListSharesExpand.
+ * Possible values include: 'deleted'
+ * @readonly
+ * @enum {string}
+ */
+export type ListSharesExpand = 'deleted';
+
+/**
+ * Defines values for GetShareExpand.
+ * Possible values include: 'stats'
+ * @readonly
+ * @enum {string}
+ */
+export type GetShareExpand = 'stats';
 
 /**
  * Defines values for Action1.
@@ -2754,6 +3223,26 @@ export type StorageAccountsListServiceSASResponse = ListServiceSasResponse & {
 };
 
 /**
+ * Contains response data for the restoreBlobRanges operation.
+ */
+export type StorageAccountsRestoreBlobRangesResponse = BlobRestoreStatus & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: BlobRestoreStatus;
+    };
+};
+
+/**
  * Contains response data for the beginCreate operation.
  */
 export type StorageAccountsBeginCreateResponse = StorageAccount & {
@@ -2770,6 +3259,26 @@ export type StorageAccountsBeginCreateResponse = StorageAccount & {
        * The response body as parsed JSON or XML
        */
       parsedBody: StorageAccount;
+    };
+};
+
+/**
+ * Contains response data for the beginRestoreBlobRanges operation.
+ */
+export type StorageAccountsBeginRestoreBlobRangesResponse = BlobRestoreStatus & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: BlobRestoreStatus;
     };
 };
 
@@ -2854,6 +3363,26 @@ export type ManagementPoliciesCreateOrUpdateResponse = ManagementPolicy & {
 };
 
 /**
+ * Contains response data for the list operation.
+ */
+export type PrivateEndpointConnectionsListResponse = PrivateEndpointConnectionListResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: PrivateEndpointConnectionListResult;
+    };
+};
+
+/**
  * Contains response data for the get operation.
  */
 export type PrivateEndpointConnectionsGetResponse = PrivateEndpointConnection & {
@@ -2910,6 +3439,166 @@ export type PrivateLinkResourcesListByStorageAccountResponse = PrivateLinkResour
        * The response body as parsed JSON or XML
        */
       parsedBody: PrivateLinkResourceListResult;
+    };
+};
+
+/**
+ * Contains response data for the list operation.
+ */
+export type ObjectReplicationPoliciesListResponse = ObjectReplicationPolicies & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: ObjectReplicationPolicies;
+    };
+};
+
+/**
+ * Contains response data for the get operation.
+ */
+export type ObjectReplicationPoliciesGetResponse = ObjectReplicationPolicy & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: ObjectReplicationPolicy;
+    };
+};
+
+/**
+ * Contains response data for the createOrUpdate operation.
+ */
+export type ObjectReplicationPoliciesCreateOrUpdateResponse = ObjectReplicationPolicy & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: ObjectReplicationPolicy;
+    };
+};
+
+/**
+ * Contains response data for the put operation.
+ */
+export type EncryptionScopesPutResponse = EncryptionScope & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: EncryptionScope;
+    };
+};
+
+/**
+ * Contains response data for the patch operation.
+ */
+export type EncryptionScopesPatchResponse = EncryptionScope & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: EncryptionScope;
+    };
+};
+
+/**
+ * Contains response data for the get operation.
+ */
+export type EncryptionScopesGetResponse = EncryptionScope & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: EncryptionScope;
+    };
+};
+
+/**
+ * Contains response data for the list operation.
+ */
+export type EncryptionScopesListResponse = EncryptionScopeListResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: EncryptionScopeListResult;
+    };
+};
+
+/**
+ * Contains response data for the listNext operation.
+ */
+export type EncryptionScopesListNextResponse = EncryptionScopeListResult & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: EncryptionScopeListResult;
     };
 };
 

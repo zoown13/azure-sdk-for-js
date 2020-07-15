@@ -1,75 +1,74 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 import { HttpOperationResponse } from "@azure/core-http";
+import {
+  AtomXmlSerializer,
+  deserializeAtomXmlResponse,
+  serializeToAtomXmlRequest
+} from "../util/atomXmlHelper";
 import * as Constants from "../util/constants";
 import {
-  serializeToAtomXmlRequest,
-  deserializeAtomXmlResponse,
-  AtomXmlSerializer
-} from "../util/atomXmlHelper";
-import {
-  getStringOrUndefined,
-  getCountDetailsOrUndefined,
-  getRawAuthorizationRules,
-  getAuthorizationRulesOrUndefined,
-  MessageCountDetails,
   AuthorizationRule,
-  getInteger,
+  EntityStatus,
+  getAuthorizationRulesOrUndefined,
   getBoolean,
+  getCountDetailsOrUndefined,
+  getInteger,
+  getIntegerOrUndefined,
+  getRawAuthorizationRules,
   getString,
-  getBooleanOrUndefined
+  getStringOrUndefined,
+  MessageCountDetails,
+  getDate
 } from "../util/utils";
 
 /**
+ * @internal
  * @ignore
  * Builds the queue options object from the user provided options.
- * Handles the differences in casing for the property names, 
+ * Handles the differences in casing for the property names,
  * converts values to string and ensures the right order as expected by the service
- * @param queueOptions
+ * @param queue
  */
-export function buildQueueOptions(queueOptions: QueueOptions): InternalQueueOptions {
+export function buildQueueOptions(queue: QueueDescription): InternalQueueOptions {
   return {
-    LockDuration: queueOptions.lockDuration,
-    MaxSizeInMegabytes: getStringOrUndefined(queueOptions.maxSizeInMegabytes),
-    RequiresDuplicateDetection: getStringOrUndefined(queueOptions.requiresDuplicateDetection),
-    RequiresSession: getStringOrUndefined(queueOptions.requiresSession),
-    DefaultMessageTimeToLive: queueOptions.defaultMessageTtl,
-    DeadLetteringOnMessageExpiration: getStringOrUndefined(
-      queueOptions.deadLetteringOnMessageExpiration
-    ),
-    DuplicateDetectionHistoryTimeWindow: queueOptions.duplicateDetectionHistoryTimeWindow,
-    MaxDeliveryCount: getStringOrUndefined(queueOptions.maxDeliveryCount),
-    EnableBatchedOperations: getStringOrUndefined(queueOptions.enableBatchedOperations),
-    SizeInBytes: getStringOrUndefined(queueOptions.sizeInBytes),
-    MessageCount: getStringOrUndefined(queueOptions.messageCount),
-    AuthorizationRules: getRawAuthorizationRules(queueOptions.authorizationRules),
-    AutoDeleteOnIdle: getStringOrUndefined(queueOptions.autoDeleteOnIdle),
-    EnablePartitioning: getStringOrUndefined(queueOptions.enablePartitioning),
-    ForwardDeadLetteredMessagesTo: queueOptions.forwardDeadLetteredMessagesTo,
-    UserMetadata: getStringOrUndefined(queueOptions.userMetadata)
+    LockDuration: queue.lockDuration,
+    MaxSizeInMegabytes: getStringOrUndefined(queue.maxSizeInMegabytes),
+    RequiresDuplicateDetection: getStringOrUndefined(queue.requiresDuplicateDetection),
+    RequiresSession: getStringOrUndefined(queue.requiresSession),
+    DefaultMessageTimeToLive: queue.defaultMessageTtl,
+    DeadLetteringOnMessageExpiration: getStringOrUndefined(queue.deadLetteringOnMessageExpiration),
+    DuplicateDetectionHistoryTimeWindow: queue.duplicateDetectionHistoryTimeWindow,
+    MaxDeliveryCount: getStringOrUndefined(queue.maxDeliveryCount),
+    EnableBatchedOperations: getStringOrUndefined(queue.enableBatchedOperations),
+    AuthorizationRules: getRawAuthorizationRules(queue.authorizationRules),
+    Status: getStringOrUndefined(queue.status),
+    AutoDeleteOnIdle: getStringOrUndefined(queue.autoDeleteOnIdle),
+    EnablePartitioning: getStringOrUndefined(queue.enablePartitioning),
+    ForwardDeadLetteredMessagesTo: getStringOrUndefined(queue.forwardDeadLetteredMessagesTo),
+    ForwardTo: getStringOrUndefined(queue.forwardTo),
+    UserMetadata: getStringOrUndefined(queue.userMetadata)
   };
 }
 
 /**
+ * @internal
  * @ignore
- * Builds the queue object from the raw json object gotten after deserializing the 
+ * Builds the queue object from the raw json object gotten after deserializing the
  * response from the service
  * @param rawQueue
  */
-export function buildQueue(rawQueue: any): QueueDetails {
+export function buildQueue(rawQueue: any): QueueDescription {
   return {
-    queueName: getString(rawQueue[Constants.QUEUE_NAME], "queueName"),
+    name: getString(rawQueue[Constants.QUEUE_NAME], "queueName"),
 
-    forwardTo: rawQueue[Constants.FORWARD_TO],
-    path: rawQueue[Constants.PATH],
+    forwardTo: getStringOrUndefined(rawQueue[Constants.FORWARD_TO]),
     userMetadata: rawQueue[Constants.USER_METADATA],
 
     lockDuration: getString(rawQueue[Constants.LOCK_DURATION], "lockDuration"),
-    sizeInBytes: getInteger(rawQueue[Constants.SIZE_IN_BYTES], "sizeInBytes"),
     maxSizeInMegabytes: getInteger(rawQueue[Constants.MAX_SIZE_IN_MEGABYTES], "maxSizeInMegabytes"),
 
-    messageCount: getInteger(rawQueue[Constants.MESSAGE_COUNT], "messageCount"),
     maxDeliveryCount: getInteger(rawQueue[Constants.MAX_DELIVERY_COUNT], "maxDeliveryCount"),
 
     enablePartitioning: getBoolean(rawQueue[Constants.ENABLE_PARTITIONING], "enablePartitioning"),
@@ -97,42 +96,54 @@ export function buildQueue(rawQueue: any): QueueDetails {
       rawQueue[Constants.DEAD_LETTERING_ON_MESSAGE_EXPIRATION],
       "deadLetteringOnMessageExpiration"
     ),
-    forwardDeadLetteredMessagesTo: rawQueue[Constants.FORWARD_DEADLETTERED_MESSAGES_TO],
-
-    messageCountDetails: getCountDetailsOrUndefined(rawQueue[Constants.COUNT_DETAILS]),
-    supportOrdering: getBooleanOrUndefined(rawQueue[Constants.SUPPORT_ORDERING]),
-    enableExpress: getBooleanOrUndefined(rawQueue[Constants.ENABLE_EXPRESS]),
+    forwardDeadLetteredMessagesTo: getStringOrUndefined(
+      rawQueue[Constants.FORWARD_DEADLETTERED_MESSAGES_TO]
+    ),
 
     authorizationRules: getAuthorizationRulesOrUndefined(rawQueue[Constants.AUTHORIZATION_RULES]),
-    isAnonymousAccessible: getBooleanOrUndefined(rawQueue[Constants.IS_ANONYMOUS_ACCESSIBLE]),
 
-    entityAvailabilityStatus: rawQueue[Constants.ENTITY_AVAILABILITY_STATUS],
+    status: rawQueue[Constants.STATUS]
+  };
+}
 
-    status: rawQueue[Constants.STATUS],
-    createdOn: rawQueue[Constants.CREATED_AT],
-    updatedOn: rawQueue[Constants.UPDATED_AT],
-    accessedOn: rawQueue[Constants.ACCESSED_AT]
+/**
+ * @internal
+ * @ignore
+ * Builds the queue runtime info object from the raw json object gotten after deserializing the
+ * response from the service
+ * @param rawQueue
+ */
+export function buildQueueRuntimeInfo(rawQueue: any): QueueRuntimeInfo {
+  return {
+    name: getString(rawQueue[Constants.QUEUE_NAME], "queueName"),
+    sizeInBytes: getIntegerOrUndefined(rawQueue[Constants.SIZE_IN_BYTES]),
+    messageCount: getIntegerOrUndefined(rawQueue[Constants.MESSAGE_COUNT]),
+    messageCountDetails: getCountDetailsOrUndefined(rawQueue[Constants.COUNT_DETAILS]),
+    createdAt: getDate(rawQueue[Constants.CREATED_AT], "createdAt"),
+    updatedAt: getDate(rawQueue[Constants.UPDATED_AT], "updatedAt"),
+    accessedAt: getDate(rawQueue[Constants.ACCESSED_AT], "accessedAt")
   };
 }
 
 /**
  * Represents settable options on a queue
  */
-export interface QueueOptions {
+export interface QueueDescription {
+  /**
+   * Name of the queue
+   */
+  name: string;
+
   /**
    * Determines the amount of time in seconds in which a message should be locked for
    * processing by a receiver. After this period, the message is unlocked and available
    * for consumption by the next receiver. Settable only at queue creation time.
    * This is to be specified in ISO-8601 duration format
    * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
    */
   lockDuration?: string;
-
-  /**
-   * The entity's size in bytes.
-   *
-   */
-  sizeInBytes?: number;
 
   /**
    * Specifies the maximum queue size in megabytes. Any attempt to enqueue a message that
@@ -141,47 +152,11 @@ export interface QueueOptions {
   maxSizeInMegabytes?: number;
 
   /**
-   * The entity's message count.
+   * If enabled, the topic will detect duplicate messages within the time
+   * span specified by the DuplicateDetectionHistoryTimeWindow property.
+   * Settable only at queue creation time.
    */
-  messageCount?: number;
-
-  /**
-   * Depending on whether DeadLettering is enabled, a message is automatically 
-   * moved to the dead-letter sub-queue or deleted if it has been stored in the 
-   * queue for longer than the specified time. 
-   * This value is overwritten by a TTL specified on the message 
-   * if and only if the message TTL is smaller than the TTL set on the queue. 
-   * This value is immutable after the Queue has been created.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  defaultMessageTtl?: string;
-
-  /**
-   * Specifies the time span during which the Service Bus detects message duplication.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  duplicateDetectionHistoryTimeWindow?: string;
-
-  /**
-   * The URL of Service Bus queue to forward deadlettered messages to.
-   *
-   */
-  forwardDeadLetteredMessagesTo?: string;
-
-  /**
-   * Max idle time before entity is deleted.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  autoDeleteOnIdle?: string;
-
-  /**
-   * The maximum delivery count of messages after which if it is still not settled,
-   * gets moved to the dead-letter sub-queue.
-   */
-  maxDeliveryCount?: number;
+  requiresDuplicateDetection?: boolean;
 
   /**
    * If set to true, the queue will be session-aware and only SessionReceiver
@@ -191,16 +166,18 @@ export interface QueueOptions {
   requiresSession?: boolean;
 
   /**
-   * Specifies if batched operations should be allowed.
+   * Depending on whether DeadLettering is enabled, a message is automatically
+   * moved to the dead-letter sub-queue or deleted if it has been stored in the
+   * queue for longer than the specified time.
+   * This value is overwritten by a TTL specified on the message
+   * if and only if the message TTL is smaller than the TTL set on the queue.
+   * This value is immutable after the Queue has been created.
+   * This is to be specified in ISO-8601 duration format
+   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
    */
-  enableBatchedOperations?: boolean;
-
-  /**
-   * If enabled, the topic will detect duplicate messages within the time
-   * span specified by the DuplicateDetectionHistoryTimeWindow property.
-   * Settable only at queue creation time.
-   */
-  requiresDuplicateDetection?: boolean;
+  defaultMessageTtl?: string;
 
   /**
    * If it is enabled and a message expires, the Service Bus moves the message
@@ -211,14 +188,58 @@ export interface QueueOptions {
   deadLetteringOnMessageExpiration?: boolean;
 
   /**
-   * ForwardTo header
+   * Specifies the time span during which the Service Bus detects message duplication.
+   * This is to be specified in ISO-8601 duration format
+   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
+   */
+  duplicateDetectionHistoryTimeWindow?: string;
+
+  /**
+   * The maximum delivery count of messages after which if it is still not settled,
+   * gets moved to the dead-letter sub-queue.
+   */
+  maxDeliveryCount?: number;
+
+  /**
+   * Specifies if batched operations should be allowed.
+   */
+  enableBatchedOperations?: boolean;
+
+  /**
+   * Authorization rules on the queue
+   */
+  authorizationRules?: AuthorizationRule[];
+
+  /**
+   * Status of the messaging entity.
+   */
+  status?: EntityStatus;
+
+  /**
+   * Absolute URL or the name of the queue or topic the
+   * messages are to be forwarded to.
+   * For example, an absolute URL input would be of the form
+   * `sb://<your-service-bus-namespace-endpoint>/<queue-or-topic-name>`
    */
   forwardTo?: string;
 
   /**
-   * The user metadata information
+   * The user provided metadata information associated with the queue description.
+   * Used to specify textual content such as tags, labels, etc.
+   * Value must not exceed 1024 bytes encoded in utf-8.
    */
   userMetadata?: string;
+
+  /**
+   * Max idle time before entity is deleted.
+   * This is to be specified in ISO-8601 duration format
+   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
+   */
+  autoDeleteOnIdle?: string;
 
   /**
    * Specifies whether the queue should be partitioned.
@@ -226,12 +247,16 @@ export interface QueueOptions {
   enablePartitioning?: boolean;
 
   /**
-   * Authorization rules on the queue
+   * Absolute URL or the name of the queue or topic the dead-lettered
+   * messages are to be forwarded to.
+   * For example, an absolute URL input would be of the form
+   * `sb://<your-service-bus-namespace-endpoint>/<queue-or-topic-name>`
    */
-  authorizationRules?: AuthorizationRule[];
+  forwardDeadLetteredMessagesTo?: string;
 }
 
 /**
+ * @internal
  * @ignore
  * Internal representation of settable options on a queue
  */
@@ -239,18 +264,14 @@ export interface InternalQueueOptions {
   /**
    * Determines the amount of time in seconds in which a message should be locked for
    * processing by a receiver. After this period, the message is unlocked and
-   * available for consumption by the next receiver. 
+   * can be consumed by the next receiver.
    * Settable only at queue creation time.
    * This is to be specified in ISO-8601 duration format
    * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
    */
   LockDuration?: string;
-
-  /**
-   * The entity's size in bytes.
-   *
-   */
-  SizeInBytes?: string;
 
   /**
    * The max size in MegaBytes
@@ -259,53 +280,11 @@ export interface InternalQueueOptions {
   MaxSizeInMegabytes?: string;
 
   /**
-   * The entity's message count.
-   *
+   *  If enabled, the topic will detect duplicate messages within the time
+   * span specified by the DuplicateDetectionHistoryTimeWindow property.
+   * Settable only at queue creation time.
    */
-  MessageCount?: string;
-
-  /**
-   * Depending on whether DeadLettering is enabled, a message is automatically moved to
-   * the DeadLetterQueue or deleted if it has been stored in the queue for longer than
-   * the specified time. This value is overwritten by a TTL specified on the message
-   * if and only if the message TTL is smaller than the TTL set on the queue.
-   * This value is immutable after the Queue has been created.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  DefaultMessageTimeToLive?: string;
-
-  /**
-   * Specifies the time span during which the Service Bus detects message duplication.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  DuplicateDetectionHistoryTimeWindow?: string;
-
-  /**
-   * The URL of Service Bus queue to forward deadlettered messages to.
-   *
-   */
-  ForwardDeadLetteredMessagesTo?: string;
-
-  /**
-   * Max idle time before entity is deleted.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  AutoDeleteOnIdle?: string;
-
-  /**
-   * The maximum delivery count of messages after which if it is still not settled,
-   * gets moved to the dead-letter sub-queue.
-   *
-   */
-  MaxDeliveryCount?: string;
-
-  /**
-   * Specifies whether the queue should be partitioned.
-   */
-  EnablePartitioning?: string;
+  RequiresDuplicateDetection?: string;
 
   /**
    * If set to true, the queue will be session-aware and only SessionReceiver
@@ -315,16 +294,17 @@ export interface InternalQueueOptions {
   RequiresSession?: string;
 
   /**
-   * Specifies if batched operations should be allowed.
+   * Depending on whether DeadLettering is enabled, a message is automatically moved to
+   * the DeadLetterQueue or deleted if it has been stored in the queue for longer than
+   * the specified time. This value is overwritten by a TTL specified on the message
+   * if and only if the message TTL is smaller than the TTL set on the queue.
+   * This value is immutable after the Queue has been created.
+   * This is to be specified in ISO-8601 duration format
+   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
    */
-  EnableBatchedOperations?: string;
-
-  /**
-   *  If enabled, the topic will detect duplicate messages within the time
-   * span specified by the DuplicateDetectionHistoryTimeWindow property.
-   * Settable only at queue creation time.
-   */
-  RequiresDuplicateDetection?: string;
+  DefaultMessageTimeToLive?: string;
 
   /**
    * If it is enabled and a message expires, the Service Bus moves the message
@@ -335,9 +315,25 @@ export interface InternalQueueOptions {
   DeadLetteringOnMessageExpiration?: string;
 
   /**
-   * The user metadata information
+   * Specifies the time span during which the Service Bus detects message duplication.
+   * This is to be specified in ISO-8601 duration format
+   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
    */
-  UserMetadata?: string;
+  DuplicateDetectionHistoryTimeWindow?: string;
+
+  /**
+   * The maximum delivery count of messages after which if it is still not settled,
+   * gets moved to the dead-letter sub-queue.
+   *
+   */
+  MaxDeliveryCount?: string;
+
+  /**
+   * Specifies if batched operations should be allowed.
+   */
+  EnableBatchedOperations?: string;
 
   /**
    * Authorization rules on the queue
@@ -345,147 +341,77 @@ export interface InternalQueueOptions {
   AuthorizationRules?: any;
 
   /**
-   * ForwardTo header
+   * Status of the messaging entity.
+   */
+  Status?: string;
+
+  /**
+   * Absolute URL or the name of the queue or topic the
+   * messages are to be forwarded to.
+   * For example, an absolute URL input would be of the form
+   * `sb://<your-service-bus-namespace-endpoint>/<queue-or-topic-name>`
    */
   ForwardTo?: string;
 
   /**
-   * Entity path
+   * The user provided metadata information associated with the queue description.
+   * Used to specify textual content such as tags, labels, etc.
+   * Value must not exceed 1024 bytes encoded in utf-8.
    */
-  Path?: string;
+  UserMetadata?: string;
 
   /**
-   * Entity status
+   * Max idle time before entity is deleted.
+   * This is to be specified in ISO-8601 duration format
+   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   *
+   * More on ISO-8601 duration format: https://en.wikipedia.org/wiki/ISO_8601#Durations
    */
-  Status?: string;
+  AutoDeleteOnIdle?: string;
+
+  /**
+   * Specifies whether the queue should be partitioned.
+   */
+  EnablePartitioning?: string;
+
+  /**
+   * Absolute URL or the name of the queue or topic the dead-lettered
+   * messages are to be forwarded to.
+   * For example, an absolute URL input would be of the form
+   * `sb://<your-service-bus-namespace-endpoint>/<queue-or-topic-name>`
+   */
+  ForwardDeadLetteredMessagesTo?: string;
 }
 
 /**
- * Represents all attributes of a queue entity
+ * Represents runtime info attributes of a queue entity
  */
-export interface QueueDetails {
+export interface QueueRuntimeInfo {
   /**
    * Name of the queue
    */
-  queueName: string;
+  name: string;
 
   /**
-   * Determines the amount of time in seconds in which a message should be locked
-   * for processing by a receiver. After this period, the message is unlocked and
-   * available for consumption by the next receiver.
-   * Settable only at queue creation time.
-   * This is specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
+   * Created at timestamp
    */
-  lockDuration: string;
+  createdAt: Date;
 
   /**
-   * The entity's size in bytes.
-   *
+   * Updated at timestamp
    */
-  sizeInBytes: number;
+  updatedAt: Date;
 
   /**
-   * Specifies the maximum queue size in megabytes. Any attempt to enqueue
-   * a message that will cause the queue to exceed this value will fail.
+   * Accessed at timestamp
    */
-  maxSizeInMegabytes: number;
+  accessedAt: Date;
 
   /**
    * The entity's message count.
    *
    */
-  messageCount: number;
-
-  /**
-   * Depending on whether DeadLettering is enabled, a message is automatically
-   * moved to the DeadLetterQueue or deleted if it has been stored in the queue
-   * for longer than the specified time. This value is overwritten by a TTL
-   * specified on the message if and only if the message TTL is smaller than
-   * the TTL set on the queue.
-   * This value is immutable after the Queue has been created.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  defaultMessageTtl: string;
-
-  /**
-   * Specifies the time span during which the Service Bus detects message duplication.
-   * This is to be specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  duplicateDetectionHistoryTimeWindow: string;
-
-  /**
-   * The URL of Service Bus queue to forward deadlettered messages to.
-   *
-   */
-  forwardDeadLetteredMessagesTo?: string;
-
-  /**
-   * Max idle time before entity is deleted.
-   * This is specified in ISO-8601 duration format
-   * such as "PT1M" for 1 minute, "PT5S" for 5 seconds.
-   */
-  autoDeleteOnIdle: string;
-
-  /**
-   * The maximum delivery count of messages after which if it is still not settled,
-   * gets moved to the dead-letter sub-queue.
-   *
-   */
-  maxDeliveryCount: number;
-
-  /**
-   * If set to true, the queue will be session-aware and only SessionReceiver
-   * will be supported. Session-aware queues are not supported through REST.
-   * Settable only at queue creation time.
-   */
-  requiresSession: boolean;
-
-  /**
-   * Specifies if batched operations should be allowed.
-   */
-  enableBatchedOperations: boolean;
-
-  /**
-   *  If enabled, the topic will detect duplicate messages within the time
-   * span specified by the DuplicateDetectionHistoryTimeWindow property.
-   * Settable only at queue creation time.
-   */
-  requiresDuplicateDetection: boolean;
-
-  /**
-   * If it is enabled and a message expires, the Service Bus moves the message
-   * from the queue into the queue’s dead-letter sub-queue. If disabled, message
-   * will be permanently deleted from the queue. Settable only at queue creation time.
-   */
-  deadLetteringOnMessageExpiration: boolean;
-
-  /**
-   * ForwardTo header
-   */
-  forwardTo?: string;
-
-  /**
-   * The user metadata information
-   */
-  userMetadata?: string;
-
-  /**
-   * Specifies whether the queue should be partitioned.
-   */
-  enablePartitioning: boolean;
-
-  /**
-   * Authorization rules on the queue
-   */
-  authorizationRules?: AuthorizationRule[];
-
-  /**
-   * Entity path
-   */
-  path?: string;
+  messageCount?: number;
 
   /**
    * Message count details
@@ -493,47 +419,14 @@ export interface QueueDetails {
   messageCountDetails?: MessageCountDetails;
 
   /**
-   * Ordering support for messages
+   * The entity's size in bytes.
+   *
    */
-  supportOrdering?: boolean;
-
-  /**
-   * Enable express option
-   */
-  enableExpress?: boolean;
-
-  /**
-   * Is anonymous accessible queue option
-   */
-  isAnonymousAccessible?: boolean;
-
-  /**
-   * Entity availability status
-   */
-  entityAvailabilityStatus?: string;
-
-  /**
-   * Queue entity status
-   */
-  status?: string;
-
-  /**
-   * Created at timestamp
-   */
-  createdOn?: string;
-
-  /**
-   * Updated at timestamp
-   */
-  updatedOn?: string;
-
-  /**
-   * Accessed at timestamp
-   */
-  accessedOn?: string;
+  sizeInBytes?: number;
 }
 
 /**
+ * @internal
  * @ignore
  * Atom XML Serializer for Queues.
  */

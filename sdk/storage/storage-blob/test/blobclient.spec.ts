@@ -2,22 +2,27 @@ import * as assert from "assert";
 import * as dotenv from "dotenv";
 
 import { AbortController } from "@azure/abort-controller";
-import { isNode, URLBuilder } from "@azure/core-http";
+import { isNode, URLBuilder, URLQuery } from "@azure/core-http";
 import { TestTracer, setTracer, SpanGraph } from "@azure/core-tracing";
 import {
   bodyToString,
   getBSU,
   getSASConnectionStringFromEnvironment,
-  setupEnvironment
+  recorderEnvSetup
 } from "./utils";
 import { record, delay } from "@azure/test-utils-recorder";
-import { BlobClient, BlockBlobClient, ContainerClient, BlockBlobTier } from "../src";
+import {
+  BlobClient,
+  BlockBlobClient,
+  ContainerClient,
+  BlockBlobTier,
+  BlobServiceClient
+} from "../src";
 import { Test_CPK_INFO } from "./utils/constants";
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 describe("BlobClient", () => {
-  setupEnvironment();
-  const blobServiceClient = getBSU();
+  let blobServiceClient: BlobServiceClient;
   let containerName: string;
   let containerClient: ContainerClient;
   let blobName: string;
@@ -28,7 +33,8 @@ describe("BlobClient", () => {
   let recorder: any;
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    blobServiceClient = getBSU();
     containerName = recorder.getUniqueName("container");
     containerClient = blobServiceClient.getContainerClient(containerName);
     await containerClient.create();
@@ -39,8 +45,117 @@ describe("BlobClient", () => {
   });
 
   afterEach(async function() {
-    await containerClient.delete();
-    recorder.stop();
+    if (!this.currentTest?.isPending()) {
+      await containerClient.delete();
+      await recorder.stop();
+    }
+  });
+
+  it("Set blob tags should work", async function() {
+    if (!isNode) {
+      // SAS in test pipeline need to support the new permission.
+      this.skip();
+    }
+
+    const tags = {
+      tag1: "val1",
+      tag2: "val2"
+    };
+    await blockBlobClient.setTags(tags);
+
+    const response = await blockBlobClient.getTags();
+    assert.deepStrictEqual(response.tags, tags);
+
+    const properties = await blockBlobClient.getProperties();
+    assert.deepStrictEqual(properties.tagCount, 2);
+
+    const download = await blockBlobClient.download();
+    assert.deepStrictEqual(download.tagCount, 2);
+
+    const listblob = containerClient.listBlobsFlat({ includeTags: true });
+
+    const iter = listblob.byPage();
+    const segment = await iter.next();
+
+    // TODO: Make blob tag type consistency cross all request or response
+    assert.deepStrictEqual(segment.value.segment.blobItems[0].tags, tags);
+  });
+
+  it("Get blob tags should work with a snapshot", async function() {
+    if (!isNode) {
+      // SAS in test pipeline need to support the new permission.
+      this.skip();
+    }
+
+    const tags = {
+      tag1: "val1",
+      tag2: "val2"
+    };
+    await blockBlobClient.setTags(tags);
+
+    const snapshotResponse = await blockBlobClient.createSnapshot();
+    const blockBlobClientSnapshot = blockBlobClient.withSnapshot(snapshotResponse.snapshot!);
+
+    const response = await blockBlobClientSnapshot.getTags();
+    assert.deepStrictEqual(response.tags, tags);
+  });
+
+  it("Create block blob should work with tags", async function() {
+    if (!isNode) {
+      // SAS in test pipeline need to support the new permission.
+      this.skip();
+    }
+
+    await blockBlobClient.delete();
+
+    const tags = {
+      tag1: "val1",
+      tag2: "val2"
+    };
+    await blockBlobClient.upload("hello", 5, { tags });
+
+    const response = await blockBlobClient.getTags();
+    assert.deepStrictEqual(response.tags, tags);
+  });
+
+  it("Create append blob should work with tags", async function() {
+    if (!isNode) {
+      // SAS in test pipeline need to support the new permission.
+      this.skip();
+    }
+
+    await blockBlobClient.delete();
+
+    const tags = {
+      tag1: "val1",
+      tag2: "val2"
+    };
+
+    const appendBlobClient = blobClient.getAppendBlobClient();
+    await appendBlobClient.create({ tags });
+
+    const response = await appendBlobClient.getTags();
+    assert.deepStrictEqual(response.tags, tags);
+  });
+
+  it("Create page blob should work with tags", async function() {
+    if (!isNode) {
+      // SAS in test pipeline need to support the new permission.
+      this.skip();
+    }
+
+    const tags = {
+      tag1: "val1",
+      tag2: "val2"
+    };
+
+    const pageBlobName = recorder.getUniqueName("pageBlobName");
+    const blobClient2 = containerClient.getBlobClient(pageBlobName);
+    const pageBlobClient = blobClient2.getPageBlobClient();
+    await pageBlobClient.create(512, { tags });
+
+    const response = await pageBlobClient.getTags();
+    assert.deepStrictEqual(response.tags, tags);
   });
 
   it("download with with default parameters", async () => {
@@ -165,6 +280,18 @@ describe("BlobClient", () => {
     await blobClient.delete();
   });
 
+  it("deleteIfExists", async () => {
+    const res = await blobClient.deleteIfExists();
+    assert.ok(res.succeeded);
+
+    const blobName2 = recorder.getUniqueName("blob2");
+    const blobClient2 = containerClient.getBlobClient(blobName2);
+    // delete a non-existent blob
+    const res2 = await blobClient2.deleteIfExists();
+    assert.ok(!res2.succeeded);
+    assert.equal(res2.errorCode, "BlobNotFound");
+  });
+
   // The following code illustrates deleting a snapshot after creating one
   it("delete snapshot", async () => {
     const result = await blobClient.createSnapshot();
@@ -174,6 +301,10 @@ describe("BlobClient", () => {
     await blobSnapshotClient.getProperties();
 
     await blobSnapshotClient.delete();
+    const res = await blobSnapshotClient.deleteIfExists();
+    assert.ok(!res.succeeded);
+    assert.equal(res.errorCode, "BlobNotFound");
+
     await blobClient.delete();
 
     const result2 = (
@@ -224,7 +355,7 @@ describe("BlobClient", () => {
   });
 
   it("undelete", async () => {
-    const properties = await blobServiceClient.getProperties();
+    let properties = await blobServiceClient.getProperties();
     if (!properties.deleteRetentionPolicy!.enabled) {
       await blobServiceClient.setProperties({
         deleteRetentionPolicy: {
@@ -232,34 +363,89 @@ describe("BlobClient", () => {
           enabled: true
         }
       });
-      await delay(15 * 1000);
+      // await delay(15 * 1000);
+      properties = await blobServiceClient.getProperties();
+      assert.ok(
+        properties.deleteRetentionPolicy!.enabled,
+        "deleteRetentionPolicy should be enabled."
+      );
     }
 
     await blobClient.delete();
 
-    const result = (
-      await containerClient
-        .listBlobsFlat({
-          includeDeleted: true
-        })
-        .byPage()
-        .next()
-    ).value;
+    const iter = containerClient
+      .listBlobsFlat({
+        includeDeleted: true,
+        includeVersions: true
+      })
+      .byPage({ maxPageSize: 1 });
 
-    assert.ok(result.segment.blobItems![0].deleted);
+    let res = await iter.next();
+    let result = res.value;
+    while (!res.done) {
+      if (
+        !!result &&
+        !!result.segment &&
+        !!result.segment.blobItems &&
+        result.segment.blobItems.length > 0
+      ) {
+        break;
+      }
+      res = await iter.next();
+      result = res.value;
+    }
+
+    assert.ok(result, "Expect valid iterator value");
+    assert.ok(result.segment, "Expect valid segment response");
+
+    assert.ok(
+      result.segment.blobItems,
+      "Expect non empty result from list blobs({ includeDeleted: true, includeVersions: true }) with page size of 1."
+    );
+
+    assert.equal(
+      result.segment.blobItems.length,
+      1,
+      `Expect result.segment.blobItems.length === 1 but got ${result.segment.blobItems.length}.`
+    );
+
+    assert.ok(
+      result.segment.blobItems![0],
+      "Expect a valid element in result array from list blobs({ includeDeleted: true }) with page size of 1."
+    );
 
     await blobClient.undelete();
 
-    const result2 = (
-      await containerClient
-        .listBlobsFlat({
-          includeDeleted: true
-        })
-        .byPage()
-        .next()
-    ).value;
+    const iter2 = containerClient
+      .listBlobsFlat({
+        includeDeleted: true,
+        includeVersions: true
+      })
+      .byPage();
 
-    assert.ok(!result2.segment.blobItems![0].deleted);
+    res = await iter2.next();
+    result = res.value;
+    while (!res.done) {
+      if (
+        !!result &&
+        !!result.segment &&
+        !!result.segment.blobItems &&
+        result.segment.blobItems.length > 0
+      ) {
+        break;
+      }
+      res = await iter2.next();
+      result = res.value;
+    }
+
+    assert.ok(result, "Expect valid iterator value");
+    assert.ok(result.segment, "Expect valid segment response");
+
+    assert.ok(result.segment.blobItems, "Expect non empty result from list blobs().");
+    assert.ok(
+      !result.segment.blobItems![0].deleted,
+      "Expect that the blob is NOT marked for deletion"
+    );
   });
 
   it("abortCopyFromClient should failed for a completed copy operation", async () => {
@@ -434,8 +620,27 @@ describe("BlobClient", () => {
     const properties2 = await newBlobURL.getProperties();
     assert.deepStrictEqual(properties1.contentMD5, properties2.contentMD5);
     assert.deepStrictEqual(properties2.copyId, result.copyId);
-    assert.deepStrictEqual(properties2.copySource, blobClient.url);
     assert.equal(properties2.accessTier, initialTier);
+
+    // A service feature is being rolling out which will sanitize the sig field
+    // so we remove it before comparing urls.
+    assert.ok(properties2.copySource, "Expecting valid 'properties2.copySource");
+
+    const sanitizedActualUrl = URLBuilder.parse(properties2.copySource!);
+    const sanitizedQuery = URLQuery.parse(sanitizedActualUrl.getQuery()!);
+    sanitizedQuery.set("sig", undefined);
+    sanitizedActualUrl.setQuery(sanitizedQuery.toString());
+
+    const sanitizedExpectedUrl = URLBuilder.parse(blobClient.url);
+    const sanitizedQuery2 = URLQuery.parse(sanitizedActualUrl.getQuery()!);
+    sanitizedQuery2.set("sig", undefined);
+    sanitizedExpectedUrl.setQuery(sanitizedQuery.toString());
+
+    assert.strictEqual(
+      sanitizedActualUrl.toString(),
+      sanitizedExpectedUrl.toString(),
+      "copySource does not match original source"
+    );
 
     await newBlobURL.setAccessTier(BlockBlobTier.Hot);
     const properties3 = await newBlobURL.getProperties();
@@ -459,7 +664,7 @@ describe("BlobClient", () => {
 
     const result = await blobClient.download(undefined, undefined, {
       tracingOptions: {
-        spanOptions: { parent: rootSpan }
+        spanOptions: { parent: rootSpan.context() }
       }
     });
     assert.deepStrictEqual(await bodyToString(result, content.length), content);
@@ -543,6 +748,28 @@ describe("BlobClient", () => {
     try {
       await blobClient.exists();
     } catch (err) {
+      exceptionCaught = true;
+    }
+    assert.ok(exceptionCaught);
+  });
+
+  it("exists with condition", async () => {
+    const leaseResp = await blobClient.getBlobLeaseClient().acquireLease(30);
+    assert.ok(leaseResp.leaseId);
+
+    assert.ok(await blobClient.exists({ conditions: { leaseId: leaseResp.leaseId! } }));
+
+    let exceptionCaught = false;
+    try {
+      let guid = "ca761232ed4211cebacd00aa0057b223";
+      if (guid === leaseResp.leaseId) {
+        guid = "ca761232ed4211cebacd00aa0057b224";
+      }
+
+      const existsRes = await blobClient.exists({ conditions: { leaseId: guid } });
+      console.log(existsRes);
+    } catch (err) {
+      assert.equal(err.details.errorCode, "LeaseIdMismatchWithBlobOperation");
       exceptionCaught = true;
     }
     assert.ok(exceptionCaught);

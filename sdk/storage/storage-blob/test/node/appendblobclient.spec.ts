@@ -7,23 +7,22 @@ import {
   StorageSharedKeyCredential,
   ContainerClient,
   generateBlobSASQueryParameters,
-  BlobSASPermissions
+  BlobSASPermissions,
+  BlobServiceClient
 } from "../../src";
 import {
   getBSU,
   getConnectionStringFromEnvironment,
   bodyToString,
-  setupEnvironment
+  recorderEnvSetup
 } from "../utils";
 import { TokenCredential } from "@azure/core-http";
 import { assertClientUsesTokenCredential } from "../utils/assert";
 import { record } from "@azure/test-utils-recorder";
 import { Test_CPK_INFO } from "../utils/constants";
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 describe("AppendBlobClient Node.js only", () => {
-  setupEnvironment();
-  const blobServiceClient = getBSU();
   let containerName: string;
   let containerClient: ContainerClient;
   let blobName: string;
@@ -31,8 +30,10 @@ describe("AppendBlobClient Node.js only", () => {
 
   let recorder: any;
 
+  let blobServiceClient: BlobServiceClient;
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    blobServiceClient = getBSU();
     containerName = recorder.getUniqueName("container");
     containerClient = blobServiceClient.getContainerClient(containerName);
     await containerClient.create();
@@ -42,7 +43,7 @@ describe("AppendBlobClient Node.js only", () => {
 
   afterEach(async function() {
     await containerClient.delete();
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("can be created with a url and a credential", async () => {

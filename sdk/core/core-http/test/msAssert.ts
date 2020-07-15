@@ -1,18 +1,7 @@
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+// Licensed under the MIT license.
 
 import { assert } from "chai";
-import { SuiteFunction, PendingSuiteFunction, TestFunction, PendingTestFunction } from "mocha";
-import { isNode } from "../lib/util/utils";
-
-export const nodeIt: TestFunction | PendingTestFunction = !isNode ? it.skip : it;
-export const browserIt: TestFunction | PendingTestFunction = isNode ? it.skip : it;
-export const nodeDescribe: SuiteFunction | PendingSuiteFunction = !isNode
-  ? describe.skip
-  : describe;
-export const browserDescribe: SuiteFunction | PendingSuiteFunction = isNode
-  ? describe.skip
-  : describe;
 
 /**
  * Assert that the provided syncFunction throws an Error. If the expectedError is undefined, then
@@ -34,7 +23,9 @@ export function throws(
   }
 
   if (!thrownError) {
-    assert.throws(() => {});
+    assert.throws(() => {
+      // Nothing to do here.
+    });
   } else if (expectedError instanceof Error) {
     assert.deepEqual(thrownError, expectedError);
   } else if (expectedError) {
@@ -64,7 +55,9 @@ export async function throwsAsync<T>(
   }
 
   if (!thrownError) {
-    assert.throws(() => {});
+    assert.throws(() => {
+      // Nothing to do here.
+    });
   } else if (expectedError instanceof Error) {
     assert.deepEqual(thrownError, expectedError);
   } else if (expectedError) {

@@ -22,11 +22,9 @@ export function nodeConfig(test = false) {
       sourcemaps(),
       replace({
         delimiters: ["", ""],
-        values: {
-          // replace dynamic checks with if (true) since this is for node only.
-          // Allows rollup's dead code elimination to be more aggressive.
-          "if (isNode)": "if (true)"
-        }
+        // replace dynamic checks with if (true) since this is for node only.
+        // Allows rollup's dead code elimination to be more aggressive.
+        "if (isNode)": "if (true)"
       }),
       nodeResolve({ preferBuiltins: true }),
       cjs()
@@ -57,7 +55,7 @@ export function browserConfig(test = false) {
     input: input,
     external: ["fs-extra", "nock", "path"],
     output: {
-      file: "browser/azure-test-utils-recorder.js",
+      file: "dist-browser/azure-test-utils-recorder.js",
       format: "umd",
       name: "testUtilsRecorder",
       sourcemap: true
@@ -67,12 +65,10 @@ export function browserConfig(test = false) {
       sourcemaps(),
       replace({
         delimiters: ["", ""],
-        values: {
-          // replace dynamic checks with if (false) since this is for
-          // browser only. Rollup's dead code elimination will remove
-          // any code guarded by if (isNode) { ... }
-          "if (isNode)": "if (false)"
-        }
+        // replace dynamic checks with if (false) since this is for
+        // browser only. Rollup's dead code elimination will remove
+        // any code guarded by if (isNode) { ... }
+        "if (isNode)": "if (false)"
       }),
       nodeResolve({
         mainFields: ["module", "browser"],
@@ -82,9 +78,12 @@ export function browserConfig(test = false) {
         // When "rollup-plugin-commonjs@10.0.0" is used with "resolve@1.11.1", named exports of
         // modules with built-in names must have a trailing slash.
         // https://github.com/rollup/rollup-plugin-commonjs/issues/394
-        namedExports: { "events/": ["EventEmitter"] }
+        namedExports: {
+          "events/": ["EventEmitter"],
+          "@opentelemetry/api": ["CanonicalCode", "SpanKind", "TraceFlags"]
+        }
       }),
-      viz({ filename: "browser/browser-stats.html", sourcemap: false })
+      viz({ filename: "dist-browser/browser-stats.html", sourcemap: false })
     ]
   };
 

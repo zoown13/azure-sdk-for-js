@@ -3,24 +3,24 @@ import * as assert from "assert";
 import * as dotenv from "dotenv";
 
 import { AbortController } from "@azure/abort-controller";
-import { ContainerClient, RestError } from "../src";
-import { newPipeline, Pipeline } from "../src/Pipeline";
-import { getBSU, setupEnvironment } from "./utils";
+import { ContainerClient, RestError, BlobServiceClient } from "../src";
+import { newPipeline, Pipeline } from "../src";
+import { getBSU, recorderEnvSetup } from "./utils";
 import { InjectorPolicyFactory } from "./utils/InjectorPolicyFactory";
 import { record, Recorder } from "@azure/test-utils-recorder";
 
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 describe("RetryPolicy", () => {
-  setupEnvironment();
-  const blobServiceClient = getBSU();
+  let blobServiceClient: BlobServiceClient;
   let containerName: string;
   let containerClient: ContainerClient;
 
   let recorder: Recorder;
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    blobServiceClient = getBSU();
     containerName = recorder.getUniqueName("container");
     containerClient = blobServiceClient.getContainerClient(containerName);
     await containerClient.create();
@@ -28,7 +28,7 @@ describe("RetryPolicy", () => {
 
   afterEach(async function() {
     await containerClient.delete();
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("Retry Policy should work when first request fails with 500", async () => {
@@ -38,6 +38,7 @@ describe("RetryPolicy", () => {
         injectCounter++;
         return new RestError("Server Internal Error", "ServerInternalError", 500);
       }
+      return;
     });
     const factories = (containerClient as any).pipeline.factories.slice(); // clone factories array
     factories.push(injector);
@@ -62,6 +63,7 @@ describe("RetryPolicy", () => {
         injectCounter++;
         return new RestError("Server Internal Error", "ServerInternalError", 500);
       }
+      return;
     });
 
     const factories = (containerClient as any).pipeline.factories.slice(); // clone factories array
@@ -123,6 +125,7 @@ describe("RetryPolicy", () => {
       if (injectCounter++ < 1) {
         return new RestError("Server Internal Error", "ServerInternalError", 500);
       }
+      return;
     });
 
     const url = blobServiceClient.url;

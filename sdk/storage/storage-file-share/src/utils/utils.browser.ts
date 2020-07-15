@@ -18,3 +18,11 @@ export async function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
     fileReader.readAsArrayBuffer(blob);
   });
 }
+
+export function streamToBuffer() {}
+
+export function readStreamToLocalFile() {}
+
+export const fsStat = function stat() {};
+
+export const fsCreateReadStream = function createReadStream() {};

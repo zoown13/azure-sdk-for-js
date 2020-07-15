@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import assert from "assert";
-import { Container } from "../../dist-esm";
-import { ItemDefinition } from "../../dist-esm/client";
+import { Container } from "../../src";
+import { ItemDefinition } from "../../src/client";
 import {
   bulkDeleteItems,
   bulkInsertItems,
@@ -12,7 +12,8 @@ import {
   createOrUpsertItem,
   getTestDatabase,
   removeAllDatabases,
-  replaceOrUpsertItem
+  replaceOrUpsertItem,
+  getTestContainer
 } from "../common/TestHelpers";
 
 /**
@@ -112,10 +113,10 @@ describe("Item CRUD", function() {
     assert.equal(replacedDocument.foo, "not bar", "property should have changed");
     assert.equal(document.id, replacedDocument.id, "document id should stay the same");
     // read document
-    const { resource: document2 } = await container
-      .item(replacedDocument.id, undefined)
-      .read<TestItem>();
+    const response2 = await container.item(replacedDocument.id, undefined).read<TestItem>();
+    const document2 = response2.resource;
     assert.equal(replacedDocument.id, document2.id);
+    assert.equal(typeof response2.requestCharge, "number");
     // delete document
     await container.item(replacedDocument.id, undefined).delete();
 
@@ -210,5 +211,12 @@ describe("Item CRUD", function() {
     );
 
     await bulkDeleteItems(container, returnedDocuments, partitionKey);
+  });
+
+  it("Should auto generate an id for a collection partitioned on id", async function() {
+    // https://github.com/Azure/azure-sdk-for-js/issues/9734
+    const container = await getTestContainer("db1", undefined, { partitionKey: "/id" });
+    const { resource } = await container.items.create({});
+    assert.ok(resource.id);
   });
 });

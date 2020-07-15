@@ -1,5 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 import { PartitionGate } from "../../src/impl/partitionGate";
 import chai from "chai";
@@ -22,12 +22,5 @@ describe("PartitionGate", () => {
 
     should.throw(() => gate.add("all"), /Partition already has a subscriber/);
     should.throw(() => gate.add("0"), /Partition already has a subscriber/);
-  });
-
-  it("invalid IDs get thrown out", () => {
-    const gate = new PartitionGate();
-
-    should.throw(() => gate.add("allo"), "Invalid partition number allo");
-    should.throw(() => gate.add("woo"), "Invalid partition number woo");
   });
 });

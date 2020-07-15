@@ -1,5 +1,5 @@
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+// Licensed under the MIT license.
 
 import { AbortSignalLike } from "@azure/abort-controller";
 import { PollOperationState, PollOperation } from "@azure/core-lro";
@@ -80,10 +80,7 @@ async function update(
  * @summary Reaches to the service and cancels the secret's operation, also updating the secret's poll operation
  * @param [options] The optional parameters, which is only an abortSignal from @azure/abort-controller
  */
-async function cancel(
-  this: DeleteSecretPollOperation,
-  _: { abortSignal?: AbortSignal } = {}
-): Promise<DeleteSecretPollOperation> {
+async function cancel(this: DeleteSecretPollOperation): Promise<DeleteSecretPollOperation> {
   throw new Error("Canceling the deletion of a secret is not supported.");
 }
 

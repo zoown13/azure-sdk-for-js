@@ -176,6 +176,30 @@ export class Container {
   }
 
   /**
+   * Restores a previously-deleted container.
+   * @param [options] The optional parameters
+   * @returns Promise<Models.ContainerRestoreResponse>
+   */
+  restore(options?: Models.ContainerRestoreOptionalParams): Promise<Models.ContainerRestoreResponse>;
+  /**
+   * @param callback The callback
+   */
+  restore(callback: coreHttp.ServiceCallback<void>): void;
+  /**
+   * @param options The optional parameters
+   * @param callback The callback
+   */
+  restore(options: Models.ContainerRestoreOptionalParams, callback: coreHttp.ServiceCallback<void>): void;
+  restore(options?: Models.ContainerRestoreOptionalParams | coreHttp.ServiceCallback<void>, callback?: coreHttp.ServiceCallback<void>): Promise<Models.ContainerRestoreResponse> {
+    return this.client.sendOperationRequest(
+      {
+        options
+      },
+      restoreOperationSpec,
+      callback) as Promise<Models.ContainerRestoreResponse>;
+  }
+
+  /**
    * [Update] establishes and manages a lock on a container for delete operations. The lock duration
    * can be 15 to 60 seconds, or can be infinite
    * @param [options] The optional parameters
@@ -424,7 +448,9 @@ const createOperationSpec: coreHttp.OperationSpec = {
     Parameters.metadata,
     Parameters.access,
     Parameters.version,
-    Parameters.requestId
+    Parameters.requestId,
+    Parameters.defaultEncryptionScope,
+    Parameters.preventEncryptionScopeOverride
   ],
   responses: {
     201: {
@@ -506,7 +532,7 @@ const setMetadataOperationSpec: coreHttp.OperationSpec = {
   queryParameters: [
     Parameters.timeoutInSeconds,
     Parameters.restype2,
-    Parameters.comp5
+    Parameters.comp6
   ],
   headerParameters: [
     Parameters.metadata,
@@ -537,7 +563,7 @@ const getAccessPolicyOperationSpec: coreHttp.OperationSpec = {
   queryParameters: [
     Parameters.timeoutInSeconds,
     Parameters.restype2,
-    Parameters.comp6
+    Parameters.comp7
   ],
   headerParameters: [
     Parameters.version,
@@ -579,7 +605,7 @@ const setAccessPolicyOperationSpec: coreHttp.OperationSpec = {
   queryParameters: [
     Parameters.timeoutInSeconds,
     Parameters.restype2,
-    Parameters.comp6
+    Parameters.comp7
   ],
   headerParameters: [
     Parameters.access,
@@ -623,6 +649,36 @@ const setAccessPolicyOperationSpec: coreHttp.OperationSpec = {
   serializer
 };
 
+const restoreOperationSpec: coreHttp.OperationSpec = {
+  httpMethod: "PUT",
+  path: "{containerName}",
+  urlParameters: [
+    Parameters.url
+  ],
+  queryParameters: [
+    Parameters.timeoutInSeconds,
+    Parameters.restype2,
+    Parameters.comp8
+  ],
+  headerParameters: [
+    Parameters.version,
+    Parameters.requestId,
+    Parameters.deletedContainerName,
+    Parameters.deletedContainerVersion
+  ],
+  responses: {
+    201: {
+      headersMapper: Mappers.ContainerRestoreHeaders
+    },
+    default: {
+      bodyMapper: Mappers.StorageError,
+      headersMapper: Mappers.ContainerRestoreHeaders
+    }
+  },
+  isXML: true,
+  serializer
+};
+
 const acquireLeaseOperationSpec: coreHttp.OperationSpec = {
   httpMethod: "PUT",
   path: "{containerName}",
@@ -631,7 +687,7 @@ const acquireLeaseOperationSpec: coreHttp.OperationSpec = {
   ],
   queryParameters: [
     Parameters.timeoutInSeconds,
-    Parameters.comp7,
+    Parameters.comp9,
     Parameters.restype2
   ],
   headerParameters: [
@@ -664,7 +720,7 @@ const releaseLeaseOperationSpec: coreHttp.OperationSpec = {
   ],
   queryParameters: [
     Parameters.timeoutInSeconds,
-    Parameters.comp7,
+    Parameters.comp9,
     Parameters.restype2
   ],
   headerParameters: [
@@ -696,7 +752,7 @@ const renewLeaseOperationSpec: coreHttp.OperationSpec = {
   ],
   queryParameters: [
     Parameters.timeoutInSeconds,
-    Parameters.comp7,
+    Parameters.comp9,
     Parameters.restype2
   ],
   headerParameters: [
@@ -728,7 +784,7 @@ const breakLeaseOperationSpec: coreHttp.OperationSpec = {
   ],
   queryParameters: [
     Parameters.timeoutInSeconds,
-    Parameters.comp7,
+    Parameters.comp9,
     Parameters.restype2
   ],
   headerParameters: [
@@ -760,7 +816,7 @@ const changeLeaseOperationSpec: coreHttp.OperationSpec = {
   ],
   queryParameters: [
     Parameters.timeoutInSeconds,
-    Parameters.comp7,
+    Parameters.comp9,
     Parameters.restype2
   ],
   headerParameters: [

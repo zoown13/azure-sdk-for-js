@@ -1,6 +1,8 @@
-/// <reference lib="esnext.asynciterable" />
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
+/// <reference lib="esnext.asynciterable" />
+
 import { ClientContext } from "./ClientContext";
 import { getPathFromLink, ResourceType, StatusCodes } from "./common";
 import {
@@ -256,7 +258,7 @@ export class QueryIterator<T> {
     return this.initPromise;
   }
   private async _init() {
-    if (this.options.forceQueryPlan === true) {
+    if (this.options.forceQueryPlan === true && this.resourceType === ResourceType.item) {
       await this.createPipelinedExecutionContext();
     }
     this.isInitialized = true;

@@ -9,11 +9,11 @@
 import * as coreHttp from "@azure/core-http";
 
 
-export const MultiLanguageInput: coreHttp.CompositeMapper = {
-  serializedName: "MultiLanguageInput",
+export const TextDocumentInput: coreHttp.CompositeMapper = {
+  serializedName: "TextDocumentInput",
   type: {
     name: "Composite",
-    className: "MultiLanguageInput",
+    className: "TextDocumentInput",
     modelProperties: {
       id: {
         required: true,
@@ -53,7 +53,7 @@ export const MultiLanguageBatchInput: coreHttp.CompositeMapper = {
           element: {
             type: {
               name: "Composite",
-              className: "MultiLanguageInput"
+              className: "TextDocumentInput"
             }
           }
         }
@@ -74,15 +74,15 @@ export const InnerError: coreHttp.CompositeMapper = {
         type: {
           name: "Enum",
           allowedValues: [
-            "invalidParameterValue",
-            "invalidRequestBodyFormat",
-            "emptyRequest",
-            "missingInputRecords",
-            "invalidDocument",
-            "modelVersionIncorrect",
-            "invalidDocumentBatch",
-            "unsupportedLanguageCode",
-            "invalidCountryHint"
+            "InvalidParameterValue",
+            "InvalidRequestBodyFormat",
+            "EmptyRequest",
+            "MissingInputRecords",
+            "InvalidDocument",
+            "ModelVersionIncorrect",
+            "InvalidDocumentBatch",
+            "UnsupportedLanguageCode",
+            "InvalidCountryHint"
           ]
         }
       },
@@ -111,7 +111,7 @@ export const InnerError: coreHttp.CompositeMapper = {
         }
       },
       innerError: {
-        serializedName: "innerError",
+        serializedName: "innererror",
         type: {
           name: "Composite",
           className: "InnerError"
@@ -133,10 +133,10 @@ export const TextAnalyticsError: coreHttp.CompositeMapper = {
         type: {
           name: "Enum",
           allowedValues: [
-            "invalidRequest",
-            "invalidArgument",
-            "internalServerError",
-            "serviceUnavailable"
+            "InvalidRequest",
+            "InvalidArgument",
+            "InternalServerError",
+            "ServiceUnavailable"
           ]
         }
       },
@@ -154,7 +154,7 @@ export const TextAnalyticsError: coreHttp.CompositeMapper = {
         }
       },
       innerError: {
-        serializedName: "innerError",
+        serializedName: "innererror",
         type: {
           name: "Composite",
           className: "InnerError"
@@ -201,6 +201,34 @@ export const DocumentError: coreHttp.CompositeMapper = {
   }
 };
 
+export const TextAnalyticsWarning: coreHttp.CompositeMapper = {
+  serializedName: "TextAnalyticsWarning",
+  type: {
+    name: "Composite",
+    className: "TextAnalyticsWarning",
+    modelProperties: {
+      code: {
+        required: true,
+        serializedName: "code",
+        type: {
+          name: "Enum",
+          allowedValues: [
+            "LongWordsInDocument",
+            "DocumentTruncated"
+          ]
+        }
+      },
+      message: {
+        required: true,
+        serializedName: "message",
+        type: {
+          name: "String"
+        }
+      }
+    }
+  }
+};
+
 export const TextDocumentStatistics: coreHttp.CompositeMapper = {
   serializedName: "TextDocumentStatistics",
   type: {
@@ -225,11 +253,11 @@ export const TextDocumentStatistics: coreHttp.CompositeMapper = {
   }
 };
 
-export const SentimentConfidenceScorePerLabel: coreHttp.CompositeMapper = {
-  serializedName: "SentimentConfidenceScorePerLabel",
+export const SentimentConfidenceScores: coreHttp.CompositeMapper = {
+  serializedName: "SentimentConfidenceScores",
   type: {
     name: "Composite",
-    className: "SentimentConfidenceScorePerLabel",
+    className: "SentimentConfidenceScores",
     modelProperties: {
       positive: {
         required: true,
@@ -262,6 +290,12 @@ export const SentenceSentiment: coreHttp.CompositeMapper = {
     name: "Composite",
     className: "SentenceSentiment",
     modelProperties: {
+      text: {
+        serializedName: "text",
+        type: {
+          name: "String"
+        }
+      },
       sentiment: {
         required: true,
         serializedName: "sentiment",
@@ -274,37 +308,12 @@ export const SentenceSentiment: coreHttp.CompositeMapper = {
           ]
         }
       },
-      sentenceScores: {
+      confidenceScores: {
         required: true,
-        serializedName: "sentenceScores",
+        serializedName: "confidenceScores",
         type: {
           name: "Composite",
-          className: "SentimentConfidenceScorePerLabel"
-        }
-      },
-      offset: {
-        required: true,
-        serializedName: "offset",
-        type: {
-          name: "Number"
-        }
-      },
-      length: {
-        required: true,
-        serializedName: "length",
-        type: {
-          name: "Number"
-        }
-      },
-      warnings: {
-        serializedName: "warnings",
-        type: {
-          name: "Sequence",
-          element: {
-            type: {
-              name: "String"
-            }
-          }
+          className: "SentimentConfidenceScores"
         }
       }
     }
@@ -344,12 +353,12 @@ export const DocumentSentiment: coreHttp.CompositeMapper = {
           className: "TextDocumentStatistics"
         }
       },
-      documentScores: {
+      confidenceScores: {
         required: true,
-        serializedName: "documentScores",
+        serializedName: "confidenceScores",
         type: {
           name: "Composite",
-          className: "SentimentConfidenceScorePerLabel"
+          className: "SentimentConfidenceScores"
         }
       },
       sentenceSentiments: {
@@ -361,6 +370,19 @@ export const DocumentSentiment: coreHttp.CompositeMapper = {
             type: {
               name: "Composite",
               className: "SentenceSentiment"
+            }
+          }
+        }
+      },
+      warnings: {
+        required: true,
+        serializedName: "warnings",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "Composite",
+              className: "TextAnalyticsWarning"
             }
           }
         }
@@ -470,36 +492,22 @@ export const Entity: coreHttp.CompositeMapper = {
           name: "String"
         }
       },
-      type: {
+      category: {
         required: true,
-        serializedName: "type",
+        serializedName: "category",
         type: {
           name: "String"
         }
       },
-      subtype: {
-        serializedName: "subtype",
+      subCategory: {
+        serializedName: "subcategory",
         type: {
           name: "String"
         }
       },
-      offset: {
+      confidenceScore: {
         required: true,
-        serializedName: "offset",
-        type: {
-          name: "Number"
-        }
-      },
-      length: {
-        required: true,
-        serializedName: "length",
-        type: {
-          name: "Number"
-        }
-      },
-      score: {
-        required: true,
-        serializedName: "score",
+        serializedName: "confidenceScore",
         type: {
           name: "Number"
         }
@@ -530,6 +538,19 @@ export const DocumentEntities: coreHttp.CompositeMapper = {
             type: {
               name: "Composite",
               className: "Entity"
+            }
+          }
+        }
+      },
+      warnings: {
+        required: true,
+        serializedName: "warnings",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "Composite",
+              className: "TextAnalyticsWarning"
             }
           }
         }
@@ -601,9 +622,9 @@ export const Match: coreHttp.CompositeMapper = {
     name: "Composite",
     className: "Match",
     modelProperties: {
-      score: {
+      confidenceScore: {
         required: true,
-        serializedName: "score",
+        serializedName: "confidenceScore",
         type: {
           name: "Number"
         }
@@ -613,20 +634,6 @@ export const Match: coreHttp.CompositeMapper = {
         serializedName: "text",
         type: {
           name: "String"
-        }
-      },
-      offset: {
-        required: true,
-        serializedName: "offset",
-        type: {
-          name: "Number"
-        }
-      },
-      length: {
-        required: true,
-        serializedName: "length",
-        type: {
-          name: "Number"
         }
       }
     }
@@ -666,7 +673,7 @@ export const LinkedEntity: coreHttp.CompositeMapper = {
           name: "String"
         }
       },
-      id: {
+      dataSourceEntityId: {
         serializedName: "id",
         type: {
           name: "String"
@@ -712,6 +719,19 @@ export const DocumentLinkedEntities: coreHttp.CompositeMapper = {
             type: {
               name: "Composite",
               className: "LinkedEntity"
+            }
+          }
+        }
+      },
+      warnings: {
+        required: true,
+        serializedName: "warnings",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "Composite",
+              className: "TextAnalyticsWarning"
             }
           }
         }
@@ -802,6 +822,19 @@ export const DocumentKeyPhrases: coreHttp.CompositeMapper = {
           }
         }
       },
+      warnings: {
+        required: true,
+        serializedName: "warnings",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "Composite",
+              className: "TextAnalyticsWarning"
+            }
+          }
+        }
+      },
       statistics: {
         serializedName: "statistics",
         type: {
@@ -863,11 +896,11 @@ export const KeyPhraseResult: coreHttp.CompositeMapper = {
   }
 };
 
-export const LanguageInput: coreHttp.CompositeMapper = {
-  serializedName: "LanguageInput",
+export const DetectLanguageInput: coreHttp.CompositeMapper = {
+  serializedName: "DetectLanguageInput",
   type: {
     name: "Composite",
-    className: "LanguageInput",
+    className: "DetectLanguageInput",
     modelProperties: {
       id: {
         required: true,
@@ -907,7 +940,7 @@ export const LanguageBatchInput: coreHttp.CompositeMapper = {
           element: {
             type: {
               name: "Composite",
-              className: "LanguageInput"
+              className: "DetectLanguageInput"
             }
           }
         }
@@ -936,9 +969,9 @@ export const DetectedLanguage: coreHttp.CompositeMapper = {
           name: "String"
         }
       },
-      score: {
+      confidenceScore: {
         required: true,
-        serializedName: "score",
+        serializedName: "confidenceScore",
         type: {
           name: "Number"
         }
@@ -960,15 +993,23 @@ export const DocumentLanguage: coreHttp.CompositeMapper = {
           name: "String"
         }
       },
-      detectedLanguages: {
+      detectedLanguage: {
         required: true,
-        serializedName: "detectedLanguages",
+        serializedName: "detectedLanguage",
+        type: {
+          name: "Composite",
+          className: "DetectedLanguage"
+        }
+      },
+      warnings: {
+        required: true,
+        serializedName: "warnings",
         type: {
           name: "Sequence",
           element: {
             type: {
               name: "Composite",
-              className: "DetectedLanguage"
+              className: "TextAnalyticsWarning"
             }
           }
         }

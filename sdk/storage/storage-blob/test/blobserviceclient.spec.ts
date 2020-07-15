@@ -1,35 +1,39 @@
 import * as assert from "assert";
 
 import * as dotenv from "dotenv";
-import { BlobServiceClient } from "../src/BlobServiceClient";
+import { BlobServiceClient } from "../src";
 import {
   getAlternateBSU,
   getBSU,
   getSASConnectionStringFromEnvironment,
   getTokenBSU,
-  setupEnvironment
+  recorderEnvSetup,
+  sleep
 } from "./utils";
 import { record, delay, Recorder } from "@azure/test-utils-recorder";
-dotenv.config({ path: "../.env" });
+import { Tags } from "../src/models";
+import { isNode } from "@azure/core-http";
+dotenv.config();
 
 describe("BlobServiceClient", () => {
-  setupEnvironment();
   let recorder: Recorder;
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
   });
 
   afterEach(async function() {
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("ListContainers with default parameters", async () => {
     const blobServiceClient = getBSU();
-    const result = (await blobServiceClient
-      .listContainers()
-      .byPage()
-      .next()).value;
+    const result = (
+      await blobServiceClient
+        .listContainers()
+        .byPage()
+        .next()
+    ).value;
     assert.ok(typeof result.requestId);
     assert.ok(result.requestId!.length > 0);
     assert.ok(typeof result.version);
@@ -50,10 +54,12 @@ describe("BlobServiceClient", () => {
 
   it("ListContainers with default parameters - null prefix shouldn't throw error", async () => {
     const blobServiceClient = getBSU();
-    const result = (await blobServiceClient
-      .listContainers({ prefix: "" })
-      .byPage()
-      .next()).value;
+    const result = (
+      await blobServiceClient
+        .listContainers({ prefix: "" })
+        .byPage()
+        .next()
+    ).value;
 
     assert.ok(result.containerItems!.length >= 0);
 
@@ -76,13 +82,15 @@ describe("BlobServiceClient", () => {
     await containerClient1.create({ metadata: { key: "val" } });
     await containerClient2.create({ metadata: { key: "val" } });
 
-    const result1 = (await blobServiceClient
-      .listContainers({
-        includeMetadata: true,
-        prefix: containerNamePrefix
-      })
-      .byPage({ maxPageSize: 1 })
-      .next()).value;
+    const result1 = (
+      await blobServiceClient
+        .listContainers({
+          includeMetadata: true,
+          prefix: containerNamePrefix
+        })
+        .byPage({ maxPageSize: 1 })
+        .next()
+    ).value;
 
     assert.ok(result1.continuationToken);
     assert.equal(result1.containerItems!.length, 1);
@@ -95,13 +103,15 @@ describe("BlobServiceClient", () => {
     assert.deepEqual(result1.containerItems![0].properties.leaseStatus, "unlocked");
     assert.deepEqual(result1.containerItems![0].metadata!.key, "val");
 
-    const result2 = (await blobServiceClient
-      .listContainers({
-        includeMetadata: true,
-        prefix: containerNamePrefix
-      })
-      .byPage({ continuationToken: result1.continuationToken, maxPageSize: 1 })
-      .next()).value;
+    const result2 = (
+      await blobServiceClient
+        .listContainers({
+          includeMetadata: true,
+          prefix: containerNamePrefix
+        })
+        .byPage({ continuationToken: result1.continuationToken, maxPageSize: 1 })
+        .next()
+    ).value;
 
     assert.ok(!result2.continuationToken);
     assert.equal(result2.containerItems!.length, 1);
@@ -161,7 +171,7 @@ describe("BlobServiceClient", () => {
     await containerClient1.create({ metadata: { key: "val" } });
     await containerClient2.create({ metadata: { key: "val" } });
 
-    const iterator = await blobServiceClient.listContainers({
+    const iterator = blobServiceClient.listContainers({
       includeMetadata: true,
       prefix: containerNamePrefix
     });
@@ -458,5 +468,73 @@ describe("BlobServiceClient", () => {
     assert.notDeepStrictEqual(response.signedService, undefined);
     assert.notDeepStrictEqual(response.signedObjectId, undefined);
     assert.notDeepStrictEqual(response.signedExpiresOn, undefined);
+  });
+
+  it("Find blob by tags should work", async function() {
+    if (!isNode) {
+      // SAS in test pipeline need to support the new permission.
+      this.skip();
+    }
+
+    const blobServiceClient = getBSU();
+
+    const containerName = recorder.getUniqueName("container1");
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    await containerClient.create();
+
+    const key1 = recorder.getUniqueName("key");
+    const key2 = recorder.getUniqueName("key2");
+
+    const blobName1 = recorder.getUniqueName("blobname1");
+    const appendBlobClient1 = containerClient.getAppendBlobClient(blobName1);
+    const tags1: Tags = {};
+    tags1[key1] = recorder.getUniqueName("val1");
+    tags1[key2] = "default";
+    await appendBlobClient1.create({ tags: tags1 });
+
+    const blobName2 = recorder.getUniqueName("blobname2");
+    const appendBlobClient2 = containerClient.getAppendBlobClient(blobName2);
+    const tags2: Tags = {};
+    tags2[key1] = recorder.getUniqueName("val2");
+    tags2[key2] = "default";
+    await appendBlobClient2.create({ tags: tags2 });
+
+    const blobName3 = recorder.getUniqueName("blobname3");
+    const appendBlobClient3 = containerClient.getAppendBlobClient(blobName3);
+    const tags3: Tags = {};
+    tags3[key1] = recorder.getUniqueName("val3");
+    tags3[key2] = "default";
+    await appendBlobClient3.create({ tags: tags3 });
+
+    // Wait for indexing tags
+    await sleep(2);
+
+    for await (const blob of blobServiceClient.findBlobsByTags(`${key1}='${tags1[key1]}'`)) {
+      assert.deepStrictEqual(blob.containerName, containerName);
+      assert.deepStrictEqual(blob.name, blobName1);
+      assert.deepStrictEqual(blob.tagValue, tags1[key1]);
+    }
+
+    const blobs = [];
+    for await (const blob of blobServiceClient.findBlobsByTags(`${key1}='${tags2[key1]}'`)) {
+      blobs.push(blob);
+    }
+    assert.deepStrictEqual(blobs.length, 1);
+    assert.deepStrictEqual(blobs[0].containerName, containerName);
+    assert.deepStrictEqual(blobs[0].name, blobName2);
+    assert.deepStrictEqual(blobs[0].tagValue, tags2[key1]);
+
+    const blobsWithTag2 = [];
+    for await (const segment of blobServiceClient.findBlobsByTags(`${key2}='default'`).byPage({
+      maxPageSize: 1
+    })) {
+      assert.ok(segment.blobs.length <= 1);
+      for (const blob of segment.blobs) {
+        blobsWithTag2.push(blob);
+      }
+    }
+    assert.deepStrictEqual(blobsWithTag2.length, 3);
+
+    await containerClient.delete();
   });
 });

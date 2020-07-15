@@ -9,6 +9,74 @@
 import * as coreHttp from "@azure/core-http";
 
 
+export const AclFailedEntry: coreHttp.CompositeMapper = {
+  serializedName: "AclFailedEntry",
+  type: {
+    name: "Composite",
+    className: "AclFailedEntry",
+    modelProperties: {
+      name: {
+        serializedName: "name",
+        type: {
+          name: "String"
+        }
+      },
+      type: {
+        serializedName: "type",
+        type: {
+          name: "String"
+        }
+      },
+      errorMessage: {
+        serializedName: "errorMessage",
+        type: {
+          name: "String"
+        }
+      }
+    }
+  }
+};
+
+export const SetAccessControlRecursiveResponse: coreHttp.CompositeMapper = {
+  serializedName: "SetAccessControlRecursiveResponse",
+  type: {
+    name: "Composite",
+    className: "SetAccessControlRecursiveResponse",
+    modelProperties: {
+      directoriesSuccessful: {
+        serializedName: "directoriesSuccessful",
+        type: {
+          name: "Number"
+        }
+      },
+      filesSuccessful: {
+        serializedName: "filesSuccessful",
+        type: {
+          name: "Number"
+        }
+      },
+      failureCount: {
+        serializedName: "failureCount",
+        type: {
+          name: "Number"
+        }
+      },
+      failedEntries: {
+        serializedName: "failedEntries",
+        type: {
+          name: "Sequence",
+          element: {
+            type: {
+              name: "Composite",
+              className: "AclFailedEntry"
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
 export const Path: coreHttp.CompositeMapper = {
   serializedName: "Path",
   type: {
@@ -34,7 +102,7 @@ export const Path: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "eTag",
         type: {
           name: "String"
@@ -108,7 +176,7 @@ export const FileSystem: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "eTag",
         type: {
           name: "String"
@@ -353,7 +421,7 @@ export const FileSystemCreateHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -405,7 +473,7 @@ export const FileSystemSetPropertiesHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -451,7 +519,7 @@ export const FileSystemGetPropertiesHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -543,7 +611,7 @@ export const FileSystemListPathsHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -595,7 +663,7 @@ export const PathCreateHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -653,7 +721,7 @@ export const PathUpdateHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -725,6 +793,12 @@ export const PathUpdateHeaders: coreHttp.CompositeMapper = {
           name: "String"
         }
       },
+      xMsContinuation: {
+        serializedName: "x-ms-continuation",
+        type: {
+          name: "String"
+        }
+      },
       requestId: {
         serializedName: "x-ms-request-id",
         type: {
@@ -759,7 +833,7 @@ export const PathLeaseHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -871,7 +945,7 @@ export const PathReadHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -1007,7 +1081,7 @@ export const PathGetPropertiesHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -1147,7 +1221,7 @@ export const PathSetAccessControlHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -1181,6 +1255,46 @@ export const PathSetAccessControlHeaders: coreHttp.CompositeMapper = {
   }
 };
 
+export const PathSetAccessControlRecursiveHeaders: coreHttp.CompositeMapper = {
+  serializedName: "path-setaccesscontrolrecursive-headers",
+  type: {
+    name: "Composite",
+    className: "PathSetAccessControlRecursiveHeaders",
+    modelProperties: {
+      date: {
+        serializedName: "date",
+        type: {
+          name: "DateTimeRfc1123"
+        }
+      },
+      clientRequestId: {
+        serializedName: "x-ms-client-request-id",
+        type: {
+          name: "String"
+        }
+      },
+      continuation: {
+        serializedName: "x-ms-continuation",
+        type: {
+          name: "String"
+        }
+      },
+      requestId: {
+        serializedName: "x-ms-request-id",
+        type: {
+          name: "String"
+        }
+      },
+      version: {
+        serializedName: "x-ms-version",
+        type: {
+          name: "String"
+        }
+      }
+    }
+  }
+};
+
 export const PathFlushDataHeaders: coreHttp.CompositeMapper = {
   serializedName: "path-flushdata-headers",
   type: {
@@ -1193,7 +1307,7 @@ export const PathFlushDataHeaders: coreHttp.CompositeMapper = {
           name: "DateTimeRfc1123"
         }
       },
-      eTag: {
+      etag: {
         serializedName: "etag",
         type: {
           name: "String"
@@ -1259,6 +1373,58 @@ export const PathAppendDataHeaders: coreHttp.CompositeMapper = {
       },
       version: {
         serializedName: "x-ms-version",
+        type: {
+          name: "String"
+        }
+      }
+    }
+  }
+};
+
+export const PathSetExpiryHeaders: coreHttp.CompositeMapper = {
+  serializedName: "path-setexpiry-headers",
+  type: {
+    name: "Composite",
+    className: "PathSetExpiryHeaders",
+    modelProperties: {
+      etag: {
+        serializedName: "etag",
+        type: {
+          name: "String"
+        }
+      },
+      lastModified: {
+        serializedName: "last-modified",
+        type: {
+          name: "DateTimeRfc1123"
+        }
+      },
+      clientRequestId: {
+        serializedName: "x-ms-client-request-id",
+        type: {
+          name: "String"
+        }
+      },
+      requestId: {
+        serializedName: "x-ms-request-id",
+        type: {
+          name: "String"
+        }
+      },
+      version: {
+        serializedName: "x-ms-version",
+        type: {
+          name: "String"
+        }
+      },
+      date: {
+        serializedName: "date",
+        type: {
+          name: "DateTimeRfc1123"
+        }
+      },
+      errorCode: {
+        serializedName: "x-ms-error-code",
         type: {
           name: "String"
         }

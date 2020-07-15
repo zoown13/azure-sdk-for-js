@@ -1,40 +1,38 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
-import { logger, logErrorStackTrace } from "./log";
-import { FullEventProcessorOptions, CloseReason } from "./eventProcessor";
-import { EventHubClient } from "./impl/eventHubClient";
+import { logErrorStackTrace, logger } from "./log";
+import { CommonEventProcessorOptions } from "./models/private";
+import { CloseReason } from "./models/public";
 import { EventPosition } from "./eventPosition";
 import { PartitionProcessor } from "./partitionProcessor";
-import { EventHubConsumer } from "./receiver";
+import { EventHubReceiver } from "./eventHubReceiver";
 import { AbortController } from "@azure/abort-controller";
 import { MessagingError } from "@azure/core-amqp";
-import { getParentSpan, TracingOptions } from "./util/operationOptions";
+import { OperationOptions, getParentSpan } from "./util/operationOptions";
 import { getTracer } from "@azure/core-tracing";
-import { Span, SpanKind, Link, CanonicalCode } from "@opentelemetry/types";
+import { CanonicalCode, Link, Span, SpanKind } from "@opentelemetry/api";
 import { extractSpanContextFromEventData } from "./diagnostics/instrumentEventData";
 import { ReceivedEventData } from "./eventData";
+import { ConnectionContext } from "./connectionContext";
 
 /**
  * @ignore
  * @internal
  */
 export class PartitionPump {
-  private _eventHubClient: EventHubClient;
   private _partitionProcessor: PartitionProcessor;
-  private _processorOptions: FullEventProcessorOptions;
-  private _receiver: EventHubConsumer | undefined;
+  private _processorOptions: CommonEventProcessorOptions;
+  private _receiver: EventHubReceiver | undefined;
   private _isReceiving: boolean = false;
   private _isStopped: boolean = false;
   private _abortController: AbortController;
-
   constructor(
-    eventHubClient: EventHubClient,
+    private _context: ConnectionContext,
     partitionProcessor: PartitionProcessor,
     private readonly _startPosition: EventPosition,
-    options: FullEventProcessorOptions
+    options: CommonEventProcessorOptions
   ) {
-    this._eventHubClient = eventHubClient;
     this._partitionProcessor = partitionProcessor;
     this._processorOptions = options;
     this._abortController = new AbortController();
@@ -62,13 +60,15 @@ export class PartitionPump {
   }
 
   private async _receiveEvents(partitionId: string): Promise<void> {
-    this._receiver = this._eventHubClient.createConsumer(
+    this._receiver = new EventHubReceiver(
+      this._context,
       this._partitionProcessor.consumerGroup,
       partitionId,
       this._startPosition,
       {
         ownerLevel: this._processorOptions.ownerLevel,
-        trackLastEnqueuedEventProperties: this._processorOptions.trackLastEnqueuedEventProperties
+        trackLastEnqueuedEventProperties: this._processorOptions.trackLastEnqueuedEventProperties,
+        retryOptions: this._processorOptions.retryOptions
       }
     );
 
@@ -93,7 +93,10 @@ export class PartitionPump {
 
         const span = createProcessingSpan(
           receivedEvents,
-          this._eventHubClient,
+          {
+            eventHubName: this._context.config.entityPath,
+            endpoint: this._context.config.endpoint
+          },
           this._processorOptions
         );
 
@@ -147,13 +150,17 @@ export class PartitionPump {
     this._isStopped = true;
     this._isReceiving = false;
     try {
+      // Trigger the cancellation before closing the receiver,
+      // otherwise the receiver will remove the listener on the abortSignal
+      // before it has a chance to be emitted.
+      this._abortController.abort();
+
       if (this._receiver) {
         await this._receiver.close();
       }
-      this._abortController.abort();
       await this._partitionProcessor.close(reason);
     } catch (err) {
-      logger.warning("An error occurred while closing the receiver.", err);
+      logger.warning(`An error occurred while closing the receiver: ${err?.name}: ${err?.message}`);
       logErrorStackTrace(err);
       this._partitionProcessor.processError(err);
       throw err;
@@ -168,7 +175,7 @@ export class PartitionPump {
 export function createProcessingSpan(
   receivedEvents: ReceivedEventData[],
   eventHubProperties: { eventHubName: string; endpoint: string },
-  tracingOptions: TracingOptions
+  options?: OperationOptions
 ): Span {
   const links: Link[] = [];
 
@@ -180,18 +187,21 @@ export function createProcessingSpan(
     }
 
     links.push({
-      spanContext
+      context: spanContext,
+      attributes: {
+        enqueuedTime: receivedEvent.enqueuedTimeUtc.getTime()
+      }
     });
   }
 
   const span = getTracer().startSpan("Azure.EventHubs.process", {
     kind: SpanKind.CONSUMER,
     links,
-    parent: getParentSpan(tracingOptions)
+    parent: getParentSpan(options?.tracingOptions)
   });
 
   span.setAttributes({
-    component: "eventhubs",
+    "az.namespace": "Microsoft.EventHub",
     "message_bus.destination": eventHubProperties.eventHubName,
     "peer.address": eventHubProperties.endpoint
   });

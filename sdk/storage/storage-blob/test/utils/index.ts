@@ -4,10 +4,10 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { SimpleTokenCredential } from "./testutils.common";
-import { StorageSharedKeyCredential } from "../../src/credentials/StorageSharedKeyCredential";
-import { BlobServiceClient } from "../../src/BlobServiceClient";
+import { StorageSharedKeyCredential } from "../../src";
+import { BlobServiceClient } from "../../src";
 import { getUniqueName } from "./testutils.common";
-import { newPipeline } from "../../src/Pipeline";
+import { newPipeline } from "../../src";
 import {
   generateAccountSASQueryParameters,
   AccountSASPermissions,
@@ -19,7 +19,7 @@ import { extractConnectionStringParts } from "../../src/utils/utils.common";
 import { TokenCredential } from "@azure/core-http";
 import { env } from "@azure/test-utils-recorder";
 
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 export * from "./testutils.common";
 
@@ -46,7 +46,10 @@ export function getGenericBSU(
   accountType: string,
   accountNameSuffix: string = ""
 ): BlobServiceClient {
-  if (env.STORAGE_CONNECTION_STRING.startsWith("UseDevelopmentStorage=true")) {
+  if (
+    env.STORAGE_CONNECTION_STRING &&
+    env.STORAGE_CONNECTION_STRING.startsWith("UseDevelopmentStorage=true")
+  ) {
     return BlobServiceClient.fromConnectionString(getConnectionStringFromEnvironment());
   } else {
     const credential = getGenericCredential(accountType) as StorageSharedKeyCredential;
@@ -136,20 +139,39 @@ export async function bodyToString(
     });
 
     response.readableStreamBody!.on("error", reject);
+    response.readableStreamBody!.on("end", () => {
+      resolve("");
+    });
   });
 }
 
 export async function createRandomLocalFile(
   folder: string,
   blockNumber: number,
+  blockContent: Buffer
+): Promise<string>;
+export async function createRandomLocalFile(
+  folder: string,
+  blockNumber: number,
   blockSize: number
+): Promise<string>;
+export async function createRandomLocalFile(
+  folder: string,
+  blockNumber: number,
+  blockSizeOrContent: number | Buffer
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const destFile = path.join(folder, getUniqueName("tempfile."));
     const ws = fs.createWriteStream(destFile);
     let offsetInMB = 0;
 
-    function randomValueHex(len = blockSize) {
+    function randomValueHex() {
+      if (blockSizeOrContent instanceof Buffer) {
+        return blockSizeOrContent;
+      }
+
+      const len = blockSizeOrContent;
+
       return randomBytes(Math.ceil(len / 2))
         .toString("hex") // convert to hexadecimal format
         .slice(0, len); // return required number of characters

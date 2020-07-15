@@ -7,11 +7,10 @@ import {
   extractConnectionStringParts
 } from "../src/utils/utils.common";
 import { record, Recorder } from "@azure/test-utils-recorder";
-import { setupEnvironment } from "./utils";
-dotenv.config({ path: "../.env" });
+import { recorderEnvSetup } from "./utils";
+dotenv.config();
 
 describe("Utility Helpers", () => {
-  setupEnvironment();
   let recorder: Recorder;
   const protocol = "https";
   const endpointSuffix = "core.windows.net";
@@ -34,11 +33,11 @@ describe("Utility Helpers", () => {
   }
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
   });
 
   afterEach(async function() {
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("sanitizeURL redacts SAS token", () => {

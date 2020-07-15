@@ -97,18 +97,12 @@ export const App: msRest.CompositeMapper = {
       },
       displayName: {
         serializedName: "properties.displayName",
-        constraints: {
-          Pattern: /^.{1,200}$/
-        },
         type: {
           name: "String"
         }
       },
       subdomain: {
         serializedName: "properties.subdomain",
-        constraints: {
-          Pattern: /^[a-z0-9-]{1,63}$/
-        },
         type: {
           name: "String"
         }
@@ -148,6 +142,13 @@ export const AppPatch: msRest.CompositeMapper = {
           }
         }
       },
+      sku: {
+        serializedName: "sku",
+        type: {
+          name: "Composite",
+          className: "AppSkuInfo"
+        }
+      },
       applicationId: {
         readOnly: true,
         serializedName: "properties.applicationId",
@@ -157,18 +158,12 @@ export const AppPatch: msRest.CompositeMapper = {
       },
       displayName: {
         serializedName: "properties.displayName",
-        constraints: {
-          Pattern: /^.{1,200}$/
-        },
         type: {
           name: "String"
         }
       },
       subdomain: {
         serializedName: "properties.subdomain",
-        constraints: {
-          Pattern: /^[a-z0-9-]{1,63}$/
-        },
         type: {
           name: "String"
         }
@@ -183,11 +178,11 @@ export const AppPatch: msRest.CompositeMapper = {
   }
 };
 
-export const ErrorResponseBody: msRest.CompositeMapper = {
-  serializedName: "ErrorResponseBody",
+export const CloudErrorBody: msRest.CompositeMapper = {
+  serializedName: "CloudErrorBody",
   type: {
     name: "Composite",
-    className: "ErrorResponseBody",
+    className: "CloudErrorBody",
     modelProperties: {
       code: {
         readOnly: true,
@@ -217,50 +212,7 @@ export const ErrorResponseBody: msRest.CompositeMapper = {
           element: {
             type: {
               name: "Composite",
-              className: "ErrorResponseBody"
-            }
-          }
-        }
-      }
-    }
-  }
-};
-
-export const ErrorDetails: msRest.CompositeMapper = {
-  serializedName: "ErrorDetails",
-  type: {
-    name: "Composite",
-    className: "ErrorDetails",
-    modelProperties: {
-      code: {
-        readOnly: true,
-        serializedName: "error.code",
-        type: {
-          name: "String"
-        }
-      },
-      message: {
-        readOnly: true,
-        serializedName: "error.message",
-        type: {
-          name: "String"
-        }
-      },
-      target: {
-        readOnly: true,
-        serializedName: "error.target",
-        type: {
-          name: "String"
-        }
-      },
-      details: {
-        serializedName: "error.details",
-        type: {
-          name: "Sequence",
-          element: {
-            type: {
-              name: "Composite",
-              className: "ErrorResponseBody"
+              className: "CloudErrorBody"
             }
           }
         }
@@ -340,9 +292,6 @@ export const OperationInputs: msRest.CompositeMapper = {
       name: {
         required: true,
         serializedName: "name",
-        constraints: {
-          Pattern: /^[a-z0-9-]{1,63}$/
-        },
         type: {
           name: "String"
         }

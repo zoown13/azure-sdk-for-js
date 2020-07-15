@@ -1,12 +1,14 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
-import { EventHubClient } from "./impl/eventHubClient";
 import { EventPosition } from "./eventPosition";
-import { FullEventProcessorOptions, CloseReason } from "./eventProcessor";
+import { CommonEventProcessorOptions } from "./models/private";
+import { CloseReason } from "./models/public";
 import { PartitionProcessor } from "./partitionProcessor";
 import { PartitionPump } from "./partitionPump";
-import { logger, logErrorStackTrace } from "./log";
+import { logErrorStackTrace, logger } from "./log";
+import { AbortSignalLike } from "@azure/abort-controller";
+import { ConnectionContext } from "./connectionContext";
 
 /**
  * The PumpManager handles the creation and removal of PartitionPumps.
@@ -26,8 +28,9 @@ export interface PumpManager {
    */
   createPump(
     startPosition: EventPosition,
-    eventHubClient: EventHubClient,
-    partitionProcessor: PartitionProcessor
+    connectionContext: ConnectionContext,
+    partitionProcessor: PartitionProcessor,
+    abortSignal: AbortSignalLike
   ): Promise<void>;
 
   /**
@@ -55,7 +58,7 @@ export interface PumpManager {
  */
 export class PumpManagerImpl implements PumpManager {
   private readonly _eventProcessorName: string;
-  private readonly _options: FullEventProcessorOptions;
+  private readonly _options: CommonEventProcessorOptions;
   private _partitionIdToPumps: {
     [partitionId: string]: PartitionPump | undefined;
   } = {};
@@ -63,7 +66,7 @@ export class PumpManagerImpl implements PumpManager {
   /**
    * @ignore
    */
-  constructor(eventProcessorName: string, eventProcessorOptions: FullEventProcessorOptions) {
+  constructor(eventProcessorName: string, eventProcessorOptions: CommonEventProcessorOptions) {
     this._eventProcessorName = eventProcessorName;
     this._options = eventProcessorOptions;
   }
@@ -93,16 +96,23 @@ export class PumpManagerImpl implements PumpManager {
   /**
    * Creates and starts a PartitionPump.
    * @param startPosition The position in the partition to start reading from.
-   * @param eventHubClient The EventHubClient to forward to the PartitionPump.
+   * @param connectionContext The ConnectionContext to forward to the PartitionPump.
    * @param partitionProcessor The PartitionProcessor to forward to the PartitionPump.
    * @ignore
    */
   public async createPump(
     startPosition: EventPosition,
-    eventHubClient: EventHubClient,
-    partitionProcessor: PartitionProcessor
+    connectionContext: ConnectionContext,
+    partitionProcessor: PartitionProcessor,
+    abortSignal: AbortSignalLike
   ): Promise<void> {
     const partitionId = partitionProcessor.partitionId;
+    if (abortSignal.aborted) {
+      logger.verbose(
+        `${this._eventProcessorName}] The subscription was closed before creating the pump for partition ${partitionId}.`
+      );
+      return;
+    }
     // attempt to get an existing pump
     const existingPump = this._partitionIdToPumps[partitionId];
     if (existingPump) {
@@ -121,15 +131,17 @@ export class PumpManagerImpl implements PumpManager {
     logger.verbose(`[${this._eventProcessorName}] [${partitionId}] Creating a new pump.`);
 
     const pump = new PartitionPump(
-      eventHubClient,
+      connectionContext,
       partitionProcessor,
       startPosition,
       this._options
     );
 
     try {
-      await pump.start();
+      // Set the pump before starting it in case the user
+      // closes the subscription while `start()` is in progress.
       this._partitionIdToPumps[partitionId] = pump;
+      await pump.start();
     } catch (err) {
       logger.verbose(
         `[${this._eventProcessorName}] [${partitionId}] An error occured while adding/updating a pump: ${err}`

@@ -3,7 +3,6 @@
 
 import { ListConfigurationSettingsOptions } from "..";
 import { URLBuilder } from "@azure/core-http";
-import { isArray } from "util";
 import {
   ListRevisionsOptions,
   ConfigurationSettingId,
@@ -111,7 +110,9 @@ export function formatWildcards(
  * @internal
  * @ignore
  */
-export function formatAcceptDateTime(newOptions: { acceptDateTime?: Date }): { acceptDatetime?: string; }{
+export function formatAcceptDateTime(newOptions: {
+  acceptDateTime?: Date;
+}): { acceptDatetime?: string } {
   return {
     acceptDatetime: newOptions.acceptDateTime && newOptions.acceptDateTime.toISOString()
   };
@@ -127,7 +128,7 @@ export function extractAfterTokenFromNextLink(nextLink: string) {
   let parsedLink = URLBuilder.parse(nextLink);
   let afterToken = parsedLink.getQueryParameterValue("after");
 
-  if (afterToken == null || isArray(afterToken)) {
+  if (afterToken == null || Array.isArray(afterToken)) {
     throw new Error("Invalid nextLink - invalid after token");
   }
 
@@ -144,7 +145,7 @@ export function extractAfterTokenFromNextLink(nextLink: string) {
 export function makeConfigurationSettingEmpty(
   configurationSetting: Partial<Record<Exclude<keyof ConfigurationSetting, "key">, any>>
 ) {
-  const names: (Exclude<keyof ConfigurationSetting, "key">)[] = [
+  const names: Exclude<keyof ConfigurationSetting, "key">[] = [
     "contentType",
     "etag",
     "label",

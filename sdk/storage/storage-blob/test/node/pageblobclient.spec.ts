@@ -1,6 +1,11 @@
 import * as assert from "assert";
 
-import { getBSU, getConnectionStringFromEnvironment, bodyToString, setupEnvironment } from "../utils";
+import {
+  getBSU,
+  getConnectionStringFromEnvironment,
+  bodyToString,
+  recorderEnvSetup
+} from "../utils";
 import {
   newPipeline,
   PageBlobClient,
@@ -8,7 +13,8 @@ import {
   ContainerClient,
   BlobClient,
   generateBlobSASQueryParameters,
-  BlobSASPermissions
+  BlobSASPermissions,
+  BlobServiceClient
 } from "../../src";
 import { TokenCredential } from "@azure/core-http";
 import { assertClientUsesTokenCredential } from "../utils/assert";
@@ -16,8 +22,6 @@ import { record, delay } from "@azure/test-utils-recorder";
 import { Test_CPK_INFO } from "../utils/constants";
 
 describe("PageBlobClient Node.js only", () => {
-  setupEnvironment();
-  const blobServiceClient = getBSU();
   let containerName: string;
   let containerClient: ContainerClient;
   let blobName: string;
@@ -26,8 +30,10 @@ describe("PageBlobClient Node.js only", () => {
 
   let recorder: any;
 
+  let blobServiceClient: BlobServiceClient;
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    blobServiceClient = getBSU();
     containerName = recorder.getUniqueName("container");
     containerClient = blobServiceClient.getContainerClient(containerName);
     await containerClient.create();
@@ -38,7 +44,7 @@ describe("PageBlobClient Node.js only", () => {
 
   afterEach(async function() {
     await containerClient.delete();
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("startCopyIncremental", async () => {
@@ -55,8 +61,8 @@ describe("PageBlobClient Node.js only", () => {
     const destPageBlobClient = containerClient.getPageBlobClient(recorder.getUniqueName("page"));
 
     await containerClient.setAccessPolicy("container");
-
-    await delay(5 * 1000);
+    // Container cache may take up to 30 seconds to take effect.
+    await delay(30 * 1000);
 
     let copySource = pageBlobClient.withSnapshot(snapshotResult.snapshot!).url;
     let copyResponse = await destPageBlobClient.startCopyIncremental(copySource);
@@ -70,7 +76,7 @@ describe("PageBlobClient Node.js only", () => {
         case "success":
           return;
         case "aborted":
-          throw new Error("Copy unexcepted aborted.");
+          throw new Error("Copy unexpected aborted.");
         case "pending":
           await delay(3000);
           copyResponse = await destPageBlobClient.getProperties();
@@ -85,13 +91,15 @@ describe("PageBlobClient Node.js only", () => {
 
     await waitForCopy();
 
-    let listBlobResponse = (await containerClient
-      .listBlobsFlat({
-        includeCopy: true,
-        includeSnapshots: true
-      })
-      .byPage()
-      .next()).value;
+    let listBlobResponse = (
+      await containerClient
+        .listBlobsFlat({
+          includeCopy: true,
+          includeSnapshots: true
+        })
+        .byPage()
+        .next()
+    ).value;
 
     assert.equal(listBlobResponse.segment.blobItems.length, 4);
 
@@ -103,13 +111,15 @@ describe("PageBlobClient Node.js only", () => {
 
     await waitForCopy();
 
-    listBlobResponse = (await containerClient
-      .listBlobsFlat({
-        includeCopy: true,
-        includeSnapshots: true
-      })
-      .byPage()
-      .next()).value;
+    listBlobResponse = (
+      await containerClient
+        .listBlobsFlat({
+          includeCopy: true,
+          includeSnapshots: true
+        })
+        .byPage()
+        .next()
+    ).value;
 
     assert.equal(listBlobResponse.segment.blobItems.length, 6);
 

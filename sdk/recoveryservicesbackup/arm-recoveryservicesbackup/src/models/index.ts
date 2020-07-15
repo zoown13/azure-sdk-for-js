@@ -12,6 +12,234 @@ import * as msRest from "@azure/ms-rest-js";
 export { BaseResource, CloudError };
 
 /**
+ * Error information associated with operation status call.
+ */
+export interface OperationStatusError {
+  /**
+   * Error code of the operation failure.
+   */
+  code?: string;
+  /**
+   * Error message displayed if the operation failure.
+   */
+  message?: string;
+}
+
+/**
+ * Contains the possible cases for OperationStatusExtendedInfo.
+ */
+export type OperationStatusExtendedInfoUnion = OperationStatusExtendedInfo | OperationStatusJobExtendedInfo | OperationStatusJobsExtendedInfo | OperationStatusProvisionILRExtendedInfo;
+
+/**
+ * Base class for additional information of operation status.
+ */
+export interface OperationStatusExtendedInfo {
+  /**
+   * Polymorphic Discriminator
+   */
+  objectType: "OperationStatusExtendedInfo";
+}
+
+/**
+ * Operation status.
+ */
+export interface OperationStatus {
+  /**
+   * ID of the operation.
+   */
+  id?: string;
+  /**
+   * Name of the operation.
+   */
+  name?: string;
+  /**
+   * Operation status. Possible values include: 'Invalid', 'InProgress', 'Succeeded', 'Failed',
+   * 'Canceled'
+   */
+  status?: OperationStatusValues;
+  /**
+   * Operation start time. Format: ISO-8601.
+   */
+  startTime?: Date;
+  /**
+   * Operation end time. Format: ISO-8601.
+   */
+  endTime?: Date;
+  /**
+   * Error information related to this operation.
+   */
+  error?: OperationStatusError;
+  /**
+   * Additional information associated with this operation.
+   */
+  properties?: OperationStatusExtendedInfoUnion;
+}
+
+/**
+ * The Private Endpoint network resource that is linked to the Private Endpoint connection
+ */
+export interface PrivateEndpoint {
+  /**
+   * Gets or sets id
+   */
+  id?: string;
+}
+
+/**
+ * Private Link Service Connection State
+ */
+export interface PrivateLinkServiceConnectionState {
+  /**
+   * Gets or sets the status. Possible values include: 'Pending', 'Approved', 'Rejected',
+   * 'Disconnected'
+   */
+  status?: PrivateEndpointConnectionStatus;
+  /**
+   * Gets or sets description
+   */
+  description?: string;
+  /**
+   * Gets or sets actions required
+   */
+  actionRequired?: string;
+}
+
+/**
+ * Private Endpoint Connection Response Properties
+ */
+export interface PrivateEndpointConnection {
+  /**
+   * Gets or sets provisioning state of the private endpoint connection. Possible values include:
+   * 'Succeeded', 'Deleting', 'Failed', 'Pending'
+   */
+  provisioningState?: ProvisioningState;
+  /**
+   * Gets or sets private endpoint associated with the private endpoint connection
+   */
+  privateEndpoint?: PrivateEndpoint;
+  /**
+   * Gets or sets private link service connection state
+   */
+  privateLinkServiceConnectionState?: PrivateLinkServiceConnectionState;
+}
+
+/**
+ * ARM Resource.
+ */
+export interface Resource extends BaseResource {
+  /**
+   * Resource Id represents the complete path to the resource.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly id?: string;
+  /**
+   * Resource name associated with the resource.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly name?: string;
+  /**
+   * Resource type represents the complete path of the form Namespace/ResourceType/ResourceType/...
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly type?: string;
+  /**
+   * Resource location.
+   */
+  location?: string;
+  /**
+   * Resource tags.
+   */
+  tags?: { [propertyName: string]: string };
+  /**
+   * Optional ETag.
+   */
+  eTag?: string;
+}
+
+/**
+ * Private Endpoint Connection Response Properties
+ */
+export interface PrivateEndpointConnectionResource extends Resource {
+  /**
+   * PrivateEndpointConnectionResource properties
+   */
+  properties?: PrivateEndpointConnection;
+}
+
+/**
+ * The resource management error additional info.
+ */
+export interface ErrorAdditionalInfo {
+  /**
+   * The additional info type.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly type?: string;
+  /**
+   * The additional info.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly info?: any;
+}
+
+/**
+ * The resource management error response.
+ */
+export interface ErrorResponse {
+  /**
+   * The error code.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly code?: string;
+  /**
+   * The error message.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly message?: string;
+  /**
+   * The error target.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly target?: string;
+  /**
+   * The error details.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly details?: ErrorResponse[];
+  /**
+   * The error additional info.
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly additionalInfo?: ErrorAdditionalInfo[];
+}
+
+/**
+ * Health Details for backup items.
+ */
+export interface HealthDetails {
+  /**
+   * Health Code
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly code?: number;
+  /**
+   * Health Title
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly title?: string;
+  /**
+   * Health Message
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly message?: string;
+  /**
+   * Health Recommended Actions
+   * **NOTE: This property will not be serialized. It can only be populated by the server.**
+   */
+  readonly recommendations?: string[];
+}
+
+/**
  * Additional information about Azure File Share backup item.
  */
 export interface AzureFileshareProtectedItemExtendedInfo {
@@ -191,10 +419,15 @@ export interface AzureFileshareProtectedItem {
    */
   protectionState?: ProtectionState;
   /**
-   * backups running status for this backup item. Possible values include: 'Passed',
-   * 'ActionRequired', 'ActionSuggested', 'Invalid'
+   * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
    */
   healthStatus?: HealthStatus;
+  /**
+   * Health details on this backup item.
+   */
+  healthDetails?: HealthDetails[];
   /**
    * Last backup operation status. Possible values: Healthy, Unhealthy.
    */
@@ -580,7 +813,8 @@ export interface AzureIaaSVMProtectedItem {
   protectionState?: ProtectionState;
   /**
    * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
-   * 'ActionSuggested', 'Invalid'
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
    */
   healthStatus?: HealthStatus;
   /**
@@ -690,7 +924,8 @@ export interface AzureIaaSClassicComputeVMProtectedItem {
   protectionState?: ProtectionState;
   /**
    * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
-   * 'ActionSuggested', 'Invalid'
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
    */
   healthStatus?: HealthStatus;
   /**
@@ -800,7 +1035,8 @@ export interface AzureIaaSComputeVMProtectedItem {
   protectionState?: ProtectionState;
   /**
    * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
-   * 'ActionSuggested', 'Invalid'
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
    */
   healthStatus?: HealthStatus;
   /**
@@ -855,27 +1091,7 @@ export interface AzureIaaSVMErrorInfo {
 /**
  * Azure IaaS VM workload-specific Health Details.
  */
-export interface AzureIaaSVMHealthDetails {
-  /**
-   * Health Code
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly code?: number;
-  /**
-   * Health Title
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly title?: string;
-  /**
-   * Health Message
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly message?: string;
-  /**
-   * Health Recommended Actions
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly recommendations?: string[];
+export interface AzureIaaSVMHealthDetails extends HealthDetails {
 }
 
 /**
@@ -1521,6 +1737,16 @@ export interface AzureVmWorkloadProtectedItem {
    */
   protectedItemHealthStatus?: ProtectedItemHealthStatus;
   /**
+   * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
+   */
+  healthStatus?: HealthStatus;
+  /**
+   * Health details on this backup item.
+   */
+  healthDetails?: HealthDetails[];
+  /**
    * Additional information for this backup item.
    */
   extendedInfo?: AzureVmWorkloadProtectedItemExtendedInfo;
@@ -1638,6 +1864,16 @@ export interface AzureVmWorkloadSAPAseDatabaseProtectedItem {
    * include: 'Invalid', 'Healthy', 'Unhealthy', 'NotReachable', 'IRPending'
    */
   protectedItemHealthStatus?: ProtectedItemHealthStatus;
+  /**
+   * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
+   */
+  healthStatus?: HealthStatus;
+  /**
+   * Health details on this backup item.
+   */
+  healthDetails?: HealthDetails[];
   /**
    * Additional information for this backup item.
    */
@@ -1757,6 +1993,16 @@ export interface AzureVmWorkloadSAPHanaDatabaseProtectedItem {
    */
   protectedItemHealthStatus?: ProtectedItemHealthStatus;
   /**
+   * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
+   */
+  healthStatus?: HealthStatus;
+  /**
+   * Health details on this backup item.
+   */
+  healthDetails?: HealthDetails[];
+  /**
    * Additional information for this backup item.
    */
   extendedInfo?: AzureVmWorkloadProtectedItemExtendedInfo;
@@ -1874,6 +2120,16 @@ export interface AzureVmWorkloadSQLDatabaseProtectedItem {
    * include: 'Invalid', 'Healthy', 'Unhealthy', 'NotReachable', 'IRPending'
    */
   protectedItemHealthStatus?: ProtectedItemHealthStatus;
+  /**
+   * Health status of protected item. Possible values include: 'Passed', 'ActionRequired',
+   * 'ActionSuggested', 'Healthy', 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy',
+   * 'PersistentUnhealthy', 'Invalid'
+   */
+  healthStatus?: HealthStatus;
+  /**
+   * Health details on this backup item.
+   */
+  healthDetails?: HealthDetails[];
   /**
    * Additional information for this backup item.
    */
@@ -2519,39 +2775,6 @@ export interface BackupResourceVaultConfig {
    * Soft Delete feature state. Possible values include: 'Invalid', 'Enabled', 'Disabled'
    */
   softDeleteFeatureState?: SoftDeleteFeatureState;
-}
-
-/**
- * ARM Resource.
- */
-export interface Resource extends BaseResource {
-  /**
-   * Resource Id represents the complete path to the resource.
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly id?: string;
-  /**
-   * Resource name associated with the resource.
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly name?: string;
-  /**
-   * Resource type represents the complete path of the form Namespace/ResourceType/ResourceType/...
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly type?: string;
-  /**
-   * Resource location.
-   */
-  location?: string;
-  /**
-   * Resource tags.
-   */
-  tags?: { [propertyName: string]: string };
-  /**
-   * Optional ETag.
-   */
-  eTag?: string;
 }
 
 /**
@@ -7055,70 +7278,6 @@ export interface MabContainer {
 }
 
 /**
- * Error information associated with operation status call.
- */
-export interface OperationStatusError {
-  /**
-   * Error code of the operation failure.
-   */
-  code?: string;
-  /**
-   * Error message displayed if the operation failure.
-   */
-  message?: string;
-}
-
-/**
- * Contains the possible cases for OperationStatusExtendedInfo.
- */
-export type OperationStatusExtendedInfoUnion = OperationStatusExtendedInfo | OperationStatusJobExtendedInfo | OperationStatusJobsExtendedInfo | OperationStatusProvisionILRExtendedInfo;
-
-/**
- * Base class for additional information of operation status.
- */
-export interface OperationStatusExtendedInfo {
-  /**
-   * Polymorphic Discriminator
-   */
-  objectType: "OperationStatusExtendedInfo";
-}
-
-/**
- * Operation status.
- */
-export interface OperationStatus {
-  /**
-   * ID of the operation.
-   */
-  id?: string;
-  /**
-   * Name of the operation.
-   */
-  name?: string;
-  /**
-   * Operation status. Possible values include: 'Invalid', 'InProgress', 'Succeeded', 'Failed',
-   * 'Canceled'
-   */
-  status?: OperationStatusValues;
-  /**
-   * Operation start time. Format: ISO-8601.
-   */
-  startTime?: Date;
-  /**
-   * Operation end time. Format: ISO-8601.
-   */
-  endTime?: Date;
-  /**
-   * Error information related to this operation.
-   */
-  error?: OperationStatusError;
-  /**
-   * Additional information associated with this operation.
-   */
-  properties?: OperationStatusExtendedInfoUnion;
-}
-
-/**
  * Operation status job extended info.
  */
 export interface OperationStatusJobExtendedInfo {
@@ -7508,41 +7667,41 @@ export interface RecoveryServicesBackupClientOptions extends AzureServiceClientO
 /**
  * @interface
  * List of RecoveryPoint resources
- * @extends Array<RecoveryPointResource>
+ * @extends Array<RecoveryPointResource>, ResourceList
  */
-export interface RecoveryPointResourceList extends Array<RecoveryPointResource> {
+export interface RecoveryPointResourceList extends Array<RecoveryPointResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of ProtectionPolicy resources
- * @extends Array<ProtectionPolicyResource>
+ * @extends Array<ProtectionPolicyResource>, ResourceList
  */
-export interface ProtectionPolicyResourceList extends Array<ProtectionPolicyResource> {
+export interface ProtectionPolicyResourceList extends Array<ProtectionPolicyResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of Job resources
- * @extends Array<JobResource>
+ * @extends Array<JobResource>, ResourceList
  */
-export interface JobResourceList extends Array<JobResource> {
+export interface JobResourceList extends Array<JobResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of ProtectedItem resources
- * @extends Array<ProtectedItemResource>
+ * @extends Array<ProtectedItemResource>, ResourceList
  */
-export interface ProtectedItemResourceList extends Array<ProtectedItemResource> {
+export interface ProtectedItemResourceList extends Array<ProtectedItemResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of ProtectionIntent resources
- * @extends Array<ProtectionIntentResource>
+ * @extends Array<ProtectionIntentResource>, ResourceList
  */
-export interface ProtectionIntentResourceList extends Array<ProtectionIntentResource> {
+export interface ProtectionIntentResourceList extends Array<ProtectionIntentResource>, ResourceList {
 }
 
 /**
@@ -7556,41 +7715,41 @@ export interface BackupManagementUsageList extends Array<BackupManagementUsage> 
 /**
  * @interface
  * List of BackupEngineBase resources
- * @extends Array<BackupEngineBaseResource>
+ * @extends Array<BackupEngineBaseResource>, ResourceList
  */
-export interface BackupEngineBaseResourceList extends Array<BackupEngineBaseResource> {
+export interface BackupEngineBaseResourceList extends Array<BackupEngineBaseResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of ProtectableContainer resources
- * @extends Array<ProtectableContainerResource>
+ * @extends Array<ProtectableContainerResource>, ResourceList
  */
-export interface ProtectableContainerResourceList extends Array<ProtectableContainerResource> {
+export interface ProtectableContainerResourceList extends Array<ProtectableContainerResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of WorkloadItem resources
- * @extends Array<WorkloadItemResource>
+ * @extends Array<WorkloadItemResource>, ResourceList
  */
-export interface WorkloadItemResourceList extends Array<WorkloadItemResource> {
+export interface WorkloadItemResourceList extends Array<WorkloadItemResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of WorkloadProtectableItem resources
- * @extends Array<WorkloadProtectableItemResource>
+ * @extends Array<WorkloadProtectableItemResource>, ResourceList
  */
-export interface WorkloadProtectableItemResourceList extends Array<WorkloadProtectableItemResource> {
+export interface WorkloadProtectableItemResourceList extends Array<WorkloadProtectableItemResource>, ResourceList {
 }
 
 /**
  * @interface
  * List of ProtectionContainer resources
- * @extends Array<ProtectionContainerResource>
+ * @extends Array<ProtectionContainerResource>, ResourceList
  */
-export interface ProtectionContainerResourceList extends Array<ProtectionContainerResource> {
+export interface ProtectionContainerResourceList extends Array<ProtectionContainerResource>, ResourceList {
 }
 
 /**
@@ -7606,6 +7765,30 @@ export interface ClientDiscoveryResponse extends Array<ClientDiscoveryValueForSi
 }
 
 /**
+ * Defines values for OperationStatusValues.
+ * Possible values include: 'Invalid', 'InProgress', 'Succeeded', 'Failed', 'Canceled'
+ * @readonly
+ * @enum {string}
+ */
+export type OperationStatusValues = 'Invalid' | 'InProgress' | 'Succeeded' | 'Failed' | 'Canceled';
+
+/**
+ * Defines values for ProvisioningState.
+ * Possible values include: 'Succeeded', 'Deleting', 'Failed', 'Pending'
+ * @readonly
+ * @enum {string}
+ */
+export type ProvisioningState = 'Succeeded' | 'Deleting' | 'Failed' | 'Pending';
+
+/**
+ * Defines values for PrivateEndpointConnectionStatus.
+ * Possible values include: 'Pending', 'Approved', 'Rejected', 'Disconnected'
+ * @readonly
+ * @enum {string}
+ */
+export type PrivateEndpointConnectionStatus = 'Pending' | 'Approved' | 'Rejected' | 'Disconnected';
+
+/**
  * Defines values for ProtectionState.
  * Possible values include: 'Invalid', 'IRPending', 'Protected', 'ProtectionError',
  * 'ProtectionStopped', 'ProtectionPaused'
@@ -7616,11 +7799,13 @@ export type ProtectionState = 'Invalid' | 'IRPending' | 'Protected' | 'Protectio
 
 /**
  * Defines values for HealthStatus.
- * Possible values include: 'Passed', 'ActionRequired', 'ActionSuggested', 'Invalid'
+ * Possible values include: 'Passed', 'ActionRequired', 'ActionSuggested', 'Healthy',
+ * 'TransientDegraded', 'PersistentDegraded', 'TransientUnhealthy', 'PersistentUnhealthy',
+ * 'Invalid'
  * @readonly
  * @enum {string}
  */
-export type HealthStatus = 'Passed' | 'ActionRequired' | 'ActionSuggested' | 'Invalid';
+export type HealthStatus = 'Passed' | 'ActionRequired' | 'ActionSuggested' | 'Healthy' | 'TransientDegraded' | 'PersistentDegraded' | 'TransientUnhealthy' | 'PersistentUnhealthy' | 'Invalid';
 
 /**
  * Defines values for RecoveryType.
@@ -8039,12 +8224,84 @@ export type ContainerType = 'Invalid' | 'Unknown' | 'IaasVMContainer' | 'IaasVMS
 export type BackupItemType = 'Invalid' | 'VM' | 'FileFolder' | 'AzureSqlDb' | 'SQLDB' | 'Exchange' | 'Sharepoint' | 'VMwareVM' | 'SystemState' | 'Client' | 'GenericDataSource' | 'SQLDataBase' | 'AzureFileShare' | 'SAPHanaDatabase' | 'SAPAseDatabase';
 
 /**
- * Defines values for OperationStatusValues.
- * Possible values include: 'Invalid', 'InProgress', 'Succeeded', 'Failed', 'Canceled'
- * @readonly
- * @enum {string}
+ * Contains response data for the get operation.
  */
-export type OperationStatusValues = 'Invalid' | 'InProgress' | 'Succeeded' | 'Failed' | 'Canceled';
+export type PrivateEndpointConnectionGetResponse = PrivateEndpointConnectionResource & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: PrivateEndpointConnectionResource;
+    };
+};
+
+/**
+ * Contains response data for the put operation.
+ */
+export type PrivateEndpointConnectionPutResponse = PrivateEndpointConnectionResource & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: PrivateEndpointConnectionResource;
+    };
+};
+
+/**
+ * Contains response data for the beginPut operation.
+ */
+export type PrivateEndpointConnectionBeginPutResponse = PrivateEndpointConnectionResource & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: PrivateEndpointConnectionResource;
+    };
+};
+
+/**
+ * Contains response data for the getOperationStatus operation.
+ */
+export type GetOperationStatusResponse = OperationStatus & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: OperationStatus;
+    };
+};
 
 /**
  * Contains response data for the get operation.
@@ -8070,6 +8327,26 @@ export type BackupResourceVaultConfigsGetResponse = BackupResourceVaultConfigRes
  * Contains response data for the update operation.
  */
 export type BackupResourceVaultConfigsUpdateResponse = BackupResourceVaultConfigResource & {
+  /**
+   * The underlying HTTP response.
+   */
+  _response: msRest.HttpResponse & {
+      /**
+       * The response body as text (string format)
+       */
+      bodyAsText: string;
+
+      /**
+       * The response body as parsed JSON or XML
+       */
+      parsedBody: BackupResourceVaultConfigResource;
+    };
+};
+
+/**
+ * Contains response data for the put operation.
+ */
+export type BackupResourceVaultConfigsPutResponse = BackupResourceVaultConfigResource & {
   /**
    * The underlying HTTP response.
    */

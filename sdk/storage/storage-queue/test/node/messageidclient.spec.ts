@@ -4,11 +4,9 @@ import { getQSU, getConnectionStringFromEnvironment } from "../utils";
 import { record, Recorder } from "@azure/test-utils-recorder";
 import { QueueClient } from "../../src/QueueClient";
 import { StorageSharedKeyCredential } from "../../src/credentials/StorageSharedKeyCredential";
-import { setupEnvironment } from "../utils/testutils.common";
+import { recorderEnvSetup } from "../utils/index.browser";
 
 describe("QueueClient messageId methods, Node.js only", () => {
-  setupEnvironment();
-  const queueServiceClient = getQSU();
   let queueName: string;
   let queueClient: QueueClient;
   const messageContent = "Hello World";
@@ -16,7 +14,8 @@ describe("QueueClient messageId methods, Node.js only", () => {
   let recorder: Recorder;
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    const queueServiceClient = getQSU();
     queueName = recorder.getUniqueName("queue");
     queueClient = queueServiceClient.getQueueClient(queueName);
     await queueClient.create();
@@ -24,7 +23,7 @@ describe("QueueClient messageId methods, Node.js only", () => {
 
   afterEach(async function() {
     await queueClient.delete();
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("update message with 64KB characters including special char which is computed after encoding", async () => {

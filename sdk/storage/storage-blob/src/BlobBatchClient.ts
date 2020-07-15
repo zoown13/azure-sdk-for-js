@@ -12,7 +12,7 @@ import { BatchResponseParser } from "./BatchResponseParser";
 import { utf8ByteLength } from "./BatchUtils";
 import { BlobBatch } from "./BlobBatch";
 import { AbortSignalLike } from "@azure/abort-controller";
-import { CanonicalCode } from "@opentelemetry/types";
+import { CanonicalCode } from "@opentelemetry/api";
 import { createSpan } from "./utils/tracing";
 import { HttpResponse, TokenCredential } from "@azure/core-http";
 import { Service } from "./generated/src/operations";
@@ -22,7 +22,6 @@ import { CommonOptions } from "./StorageClient";
 import { BlobDeleteOptions, BlobClient, BlobSetTierOptions } from "./Clients";
 import { StorageClientContext } from "./generated/src/storageClientContext";
 import { Pipeline, StoragePipelineOptions, newPipeline } from "./Pipeline";
-import { getCachedDefaultHttpClient } from "./utils/cache";
 
 /**
  * Options to configure the Service - Submit Batch Optional Params.
@@ -112,20 +111,14 @@ export class BlobBatchClient {
       | Pipeline,
     options?: StoragePipelineOptions
   ) {
-    // when options.httpClient is not specified, passing in a DefaultHttpClient instance to
-    // avoid each client creating its own http client.
-    const newOptions: StoragePipelineOptions = {
-      httpClient: getCachedDefaultHttpClient(),
-      ...options
-    };
     let pipeline: Pipeline;
     if (credentialOrPipeline instanceof Pipeline) {
       pipeline = credentialOrPipeline;
     } else if (!credentialOrPipeline) {
       // no credential provided
-      pipeline = newPipeline(new AnonymousCredential(), newOptions);
+      pipeline = newPipeline(new AnonymousCredential(), options);
     } else {
-      pipeline = newPipeline(credentialOrPipeline, newOptions);
+      pipeline = newPipeline(credentialOrPipeline, options);
     }
 
     const storageClientContext = new StorageClientContext(url, pipeline.toServiceClientOptions());

@@ -3,6 +3,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import multiEntry from "@rollup/plugin-multi-entry";
 import cjs from "@rollup/plugin-commonjs";
 import replace from "@rollup/plugin-replace";
+import shim from "rollup-plugin-shim";
 import { terser } from "rollup-plugin-terser";
 import sourcemaps from "rollup-plugin-sourcemaps";
 import viz from "rollup-plugin-visualizer";
@@ -24,11 +25,9 @@ export function nodeConfig(test = false) {
       sourcemaps(),
       replace({
         delimiters: ["", ""],
-        values: {
-          // replace dynamic checks with if (true) since this is for node only.
-          // Allows rollup's dead code elimination to be more aggressive.
-          "if (isNode)": "if (true)"
-        }
+        // replace dynamic checks with if (true) since this is for node only.
+        // Allows rollup's dead code elimination to be more aggressive.
+        "if (isNode)": "if (true)"
       }),
       nodeResolve({ preferBuiltins: true }),
       cjs()
@@ -61,23 +60,29 @@ export function browserConfig(test = false, production = false) {
   const baseConfig = {
     input: input,
     output: {
-      file: "browser/azure-ai-text-analytics.js",
+      file: "dist-browser/azure-ai-text-analytics.js",
       format: "umd",
       name: "Azure.CognitiveServicesTextAnalytics",
       sourcemap: true,
       globals: { "@azure/core-http": "Azure.Core.HTTP" }
     },
     preserveSymlinks: false,
+    external: ["fs-extra"],
     plugins: [
       sourcemaps(),
       replace({
         delimiters: ["", ""],
-        values: {
-          // replace dynamic checks with if (false) since this is for
-          // browser only. Rollup's dead code elimination will remove
-          // any code guarded by if (isNode) { ... }
-          "if (isNode)": "if (false)"
-        }
+        // replace dynamic checks with if (false) since this is for
+        // browser only. Rollup's dead code elimination will remove
+        // any code guarded by if (isNode) { ... }
+        "if (isNode)": "if (false)"
+      }),
+      shim({
+        constants: `export default {}`,
+        fs: `export default {}`,
+        os: `export default {}`,
+        dotenv: `export function config() { }`,
+        path: `export default {}`
       }),
       nodeResolve({
         mainFields: ["module", "browser"],
@@ -85,12 +90,12 @@ export function browserConfig(test = false, production = false) {
       }),
       cjs({
         namedExports: {
-          chai: ["assert"],
+          chai: ["assert", "expect", "use"],
           events: ["EventEmitter"],
-          "@opentelemetry/types": ["CanonicalCode", "SpanKind", "TraceFlags"]
+          "@opentelemetry/api": ["CanonicalCode", "SpanKind", "TraceFlags"]
         }
       }),
-      viz({ filename: "browser/browser-stats.html", sourcemap: false })
+      viz({ filename: "dist-browser/browser-stats.html", sourcemap: false })
     ]
   };
 
@@ -117,7 +122,7 @@ export function browserConfig(test = false, production = false) {
     // applies to test code, which causes all tests to be removed by tree-shaking.
     baseConfig.treeshake = false;
   } else if (production) {
-    baseConfig.output.file = "browser/azure-ai-text-analytics.min.js";
+    baseConfig.output.file = "dist-browser/azure-ai-text-analytics.min.js";
     baseConfig.plugins.push(terser());
   }
 

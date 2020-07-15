@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+// Licensed under the MIT license.
 
 import { assert, AssertionError } from "chai";
 import sinon from "sinon";
-import { ThrottlingRetryPolicy } from "../../lib/policies/throttlingRetryPolicy";
-import { WebResource } from "../../lib/webResource";
-import { HttpOperationResponse } from "../../lib/httpOperationResponse";
-import { HttpHeaders, RequestPolicyOptions } from "../../lib/coreHttp";
+import { ThrottlingRetryPolicy } from "../../src/policies/throttlingRetryPolicy";
+import { WebResource } from "../../src/webResource";
+import { HttpOperationResponse } from "../../src/httpOperationResponse";
+import { HttpHeaders, RequestPolicyOptions } from "../../src/coreHttp";
 
 describe("ThrottlingRetryPolicy", () => {
   class PassThroughPolicy {
@@ -33,7 +33,7 @@ describe("ThrottlingRetryPolicy", () => {
       httpRequest: WebResource,
       response: HttpOperationResponse
     ) => Promise<HttpOperationResponse>
-  ) {
+  ): ThrottlingRetryPolicy {
     if (!response) {
       response = defaultResponse;
     }

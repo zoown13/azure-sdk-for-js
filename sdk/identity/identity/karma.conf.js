@@ -20,7 +20,7 @@ module.exports = function(config) {
       "karma-ie-launcher",
       "karma-env-preprocessor",
       "karma-coverage",
-      "karma-remap-coverage",
+      "karma-remap-istanbul",
       "karma-junit-reporter",
       "karma-json-preprocessor"
     ],
@@ -31,7 +31,7 @@ module.exports = function(config) {
       // Promise,String.prototype.startsWith,String.prototype.endsWith,String.prototype.repeat,String.prototype.includes,Array.prototype.includes,Object.keys
       "https://cdn.polyfill.io/v2/polyfill.js?features=Symbol,Promise,String.prototype.startsWith,String.prototype.endsWith,String.prototype.repeat,String.prototype.includes,Array.prototype.includes,Object.keys|always",
       "test-browser/index.js",
-      "recordings/browsers/**/*.json"
+      { pattern: "test-browser/index.js.map", type: "html", included: false, served: true }
     ],
 
     // list of files / patterns to exclude
@@ -55,20 +55,22 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ["mocha", "coverage", "remap-coverage", "junit"],
+    reporters: ["mocha", "coverage", "karma-remap-istanbul", "junit"],
 
-    coverageReporter: { type: "in-memory" },
-
-    // Coverage report settings
-    remapCoverageReporter: {
-      "text-summary": null, // to show summary in console
-      html: "./coverage-browser",
-      cobertura: "./coverage-browser/cobertura-coverage.xml"
+    coverageReporter: {
+      // specify a common output directory
+      dir: "coverage-browser/",
+      reporters: [{ type: "json", subdir: ".", file: "coverage.json" }]
     },
 
-    // Exclude coverage calculation for following files
-    remapOptions: {
-      exclude: /node_modules|test/g
+    remapIstanbulReporter: {
+      src: "coverage-browser/coverage.json",
+      reports: {
+        lcovonly: "coverage-browser/lcov.info",
+        html: "coverage-browser/html/report",
+        "text-summary": null,
+        cobertura: "./coverage-browser/cobertura-coverage.xml"
+      }
     },
 
     junitReporter: {
@@ -110,10 +112,6 @@ module.exports = function(config) {
     browserNoActivityTimeout: 600000,
     browserDisconnectTimeout: 10000,
     browserDisconnectTolerance: 3,
-    browserConsoleLogOptions: {
-      // IMPORTANT: COMMENT the following line if you want to print debug logs in your browsers in record mode!!
-      terminal: process.env.TEST_MODE !== "record"
-    },
 
     client: {
       mocha: {

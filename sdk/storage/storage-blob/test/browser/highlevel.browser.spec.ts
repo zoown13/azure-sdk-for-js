@@ -9,15 +9,13 @@ import {
   getBrowserFile,
   getBSU,
   isIE,
-  setupEnvironment
+  recorderEnvSetup
 } from "../utils/index.browser";
 import { record, Recorder } from "@azure/test-utils-recorder";
-import { ContainerClient, BlobClient, BlockBlobClient } from "../../src";
+import { ContainerClient, BlobClient, BlockBlobClient, BlobServiceClient } from "../../src";
 
 // tslint:disable:no-empty
 describe("Highlevel", () => {
-  setupEnvironment();
-  const blobServiceClient = getBSU();
   let containerName: string;
   let containerClient: ContainerClient;
   let blobName: string;
@@ -30,8 +28,10 @@ describe("Highlevel", () => {
 
   let recorder: Recorder;
 
+  let blobServiceClient: BlobServiceClient;
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    blobServiceClient = getBSU();
     containerName = recorder.getUniqueName("container");
     containerClient = blobServiceClient.getContainerClient(containerName);
     await containerClient.create();
@@ -41,15 +41,17 @@ describe("Highlevel", () => {
   });
 
   afterEach(async function() {
-    await containerClient.delete();
-    recorder.stop();
+    if (!this.currentTest?.isPending()) {
+      await containerClient.delete();
+      await recorder.stop();
+    }
   });
 
   before(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
     tempFile1 = getBrowserFile(recorder.getUniqueName("browserfile"), tempFile1Length);
-    tempFile2 = getBrowserFile(recorder.getUniqueName("browserfile"), tempFile2Length);
-    recorder.stop();
+    tempFile2 = getBrowserFile(recorder.getUniqueName("browserfile2"), tempFile2Length);
+    await recorder.stop();
   });
 
   after(async () => {});
@@ -150,6 +152,25 @@ describe("Highlevel", () => {
     const uploadedString = await blobToString(tempFile2);
 
     assert.equal(uploadedString, downloadedString);
+  });
+
+  // SAS in test pipeline need to support the new permission.
+  it.skip("uploadBrowserDataToBlockBlob should work with tags", async function() {
+    recorder.skip("browser", "Temp file - recorder doesn't support saving the file");
+
+    const tags = {
+      tag1: "val1",
+      tag2: "val2"
+    };
+
+    await blockBlobClient.uploadBrowserData(tempFile2, {
+      blockSize: 512 * 1024,
+      maxSingleShotSize: 0,
+      tags
+    });
+
+    const response = await blockBlobClient.getTags();
+    assert.deepStrictEqual(response.tags, tags);
   });
 
   it("uploadBrowserDataToBlockBlob should success when blob >= BLOCK_BLOB_MAX_UPLOAD_BLOB_BYTES", async function() {

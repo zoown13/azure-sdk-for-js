@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 import { ChangeFeedIterator } from "../../ChangeFeedIterator";
 import { ChangeFeedOptions } from "../../ChangeFeedOptions";
 import { ClientContext } from "../../ClientContext";
@@ -39,7 +39,7 @@ export class Items {
   constructor(
     public readonly container: Container,
     private readonly clientContext: ClientContext
-  ) {}
+  ) { }
 
   /**
    * Queries all items.
@@ -84,7 +84,8 @@ export class Items {
         resourceId: id,
         resultFn: (result) => (result ? result.Documents : []),
         query,
-        options: innerOptions
+        options: innerOptions,
+        partitionKey: options.partitionKey
       });
     };
 
@@ -263,14 +264,14 @@ export class Items {
     body: T,
     options: RequestOptions = {}
   ): Promise<ItemResponse<T>> {
-    const { resource: partitionKeyDefinition } = await this.container.readPartitionKeyDefinition();
-    const partitionKey = extractPartitionKey(body, partitionKeyDefinition);
-
     // Generate random document id if the id is missing in the payload and
     // options.disableAutomaticIdGeneration != true
     if ((body.id === undefined || body.id === "") && !options.disableAutomaticIdGeneration) {
       body.id = uuid();
     }
+
+    const { resource: partitionKeyDefinition } = await this.container.readPartitionKeyDefinition();
+    const partitionKey = extractPartitionKey(body, partitionKeyDefinition);
 
     const err = {};
     if (!isResourceValid(body, err)) {

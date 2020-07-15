@@ -88,6 +88,10 @@ export interface AppPatch {
    */
   tags?: { [propertyName: string]: string };
   /**
+   * A valid instance SKU.
+   */
+  sku?: AppSkuInfo;
+  /**
    * The ID of the application.
    * **NOTE: This property will not be serialized. It can only be populated by the server.**
    */
@@ -111,7 +115,7 @@ export interface AppPatch {
 /**
  * Details of error response.
  */
-export interface ErrorResponseBody {
+export interface CloudErrorBody {
   /**
    * The error code.
    * **NOTE: This property will not be serialized. It can only be populated by the server.**
@@ -130,32 +134,7 @@ export interface ErrorResponseBody {
   /**
    * A list of additional details about the error.
    */
-  details?: ErrorResponseBody[];
-}
-
-/**
- * Error details.
- */
-export interface ErrorDetails {
-  /**
-   * The error code.
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly code?: string;
-  /**
-   * The error message.
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly message?: string;
-  /**
-   * The target of the particular error.
-   * **NOTE: This property will not be serialized. It can only be populated by the server.**
-   */
-  readonly target?: string;
-  /**
-   * A list of additional details about the error.
-   */
-  details?: ErrorResponseBody[];
+  details?: CloudErrorBody[];
 }
 
 /**

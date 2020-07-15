@@ -7,13 +7,11 @@ import * as dotenv from "dotenv";
 
 import { DataLakeFileClient, DataLakeFileSystemClient } from "../src";
 import { toPermissionsString } from "../src/transforms";
-import { bodyToString, getDataLakeServiceClient, setupEnvironment } from "./utils";
+import { bodyToString, getDataLakeServiceClient, recorderEnvSetup } from "./utils";
 
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 describe("DataLakePathClient", () => {
-  setupEnvironment();
-  const serviceClient = getDataLakeServiceClient();
   let fileSystemName: string;
   let fileSystemClient: DataLakeFileSystemClient;
   let fileName: string;
@@ -23,7 +21,8 @@ describe("DataLakePathClient", () => {
   let recorder: any;
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    const serviceClient = getDataLakeServiceClient();
     fileSystemName = recorder.getUniqueName("filesystem");
     fileSystemClient = serviceClient.getFileSystemClient(fileSystemName);
     await fileSystemClient.create();
@@ -36,7 +35,7 @@ describe("DataLakePathClient", () => {
 
   afterEach(async function() {
     await fileSystemClient.delete();
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("read with with default parameters", async () => {
@@ -153,7 +152,7 @@ describe("DataLakePathClient", () => {
 
     const result = await fileClient.read(undefined, undefined, {
       tracingOptions: {
-        spanOptions: { parent: rootSpan }
+        spanOptions: { parent: rootSpan.context() }
       }
     });
     assert.deepStrictEqual(await bodyToString(result, content.length), content);
@@ -315,5 +314,51 @@ describe("DataLakePathClient", () => {
     assert.deepStrictEqual(properties.metadata, metadata);
 
     await tempFileClient.delete();
+  });
+
+  it("exists returns true on an existing file", async () => {
+    const result = await fileClient.exists();
+    assert.ok(result, "exists() should return true for an existing file");
+  });
+
+  it("exists returns false on non-existing file or directory", async () => {
+    const newFileClient = fileSystemClient.getFileClient(recorder.getUniqueName("newFile"));
+    const result = await newFileClient.exists();
+    assert.ok(result === false, "exists() should return false for a non-existing file");
+
+    const newDirectoryClient = fileSystemClient.getDirectoryClient(
+      recorder.getUniqueName("newDirectory")
+    );
+    const dirResult = await newDirectoryClient.exists();
+    assert.ok(dirResult === false, "exists() should return false for a non-existing directory");
+  });
+
+  it("DataLakeDirectoryClient-createIfNotExists", async () => {
+    const directoryName = recorder.getUniqueName("dir");
+    const directoryClient = fileSystemClient.getDirectoryClient(directoryName);
+    const res = await directoryClient.createIfNotExists();
+    assert.ok(res.succeeded);
+
+    const res2 = await directoryClient.createIfNotExists();
+    assert.ok(!res2.succeeded);
+    assert.equal(res2.errorCode, "PathAlreadyExists");
+  });
+
+  it("DataLakeFileClient-createIfNotExists", async () => {
+    const res = await fileClient.createIfNotExists();
+    assert.ok(!res.succeeded);
+    assert.equal(res.errorCode, "PathAlreadyExists");
+  });
+
+  it("DataLakePathClient-deleteIfExists", async () => {
+    const directoryName = recorder.getUniqueName("dir");
+    const directoryClient = fileSystemClient.getDirectoryClient(directoryName);
+    const res = await directoryClient.deleteIfExists();
+    assert.ok(!res.succeeded);
+    assert.equal(res.errorCode, "PathNotFound");
+
+    await directoryClient.create();
+    const res2 = await directoryClient.deleteIfExists();
+    assert.ok(res2.succeeded);
   });
 });

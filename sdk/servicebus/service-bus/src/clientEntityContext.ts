@@ -1,23 +1,20 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 import * as log from "./log";
 import { StreamingReceiver } from "./core/streamingReceiver";
 import { MessageSender } from "./core/messageSender";
 import { ManagementClient, ManagementClientOptions } from "./core/managementClient";
 import { ConnectionContext } from "./connectionContext";
-import { Dictionary, AmqpError } from "rhea-promise";
-import { ClientType } from "./client";
+import { AmqpError } from "rhea-promise";
 import { BatchingReceiver } from "./core/batchingReceiver";
 import { ConcurrentExpiringMap } from "./util/concurrentExpiringMap";
 import { MessageReceiver } from "./core/messageReceiver";
 import { MessageSession } from "./session/messageSession";
-import { SessionManager } from "./session/sessionManager";
 
 /**
- * @interface ClientEntityContext
  * Provides contextual information like the underlying amqp connection, cbs session,
- * management session, tokenProvider, senders, receivers, etc. about the ServiceBus client.
+ * management session, tokenCredential, senders, receivers, etc. about the ServiceBus client.
  * @internal
  */
 export interface ClientEntityContextBase {
@@ -52,14 +49,10 @@ export interface ClientEntityContextBase {
    */
   batchingReceiver?: BatchingReceiver;
   /**
-   * @property {Dictionary<MessageSession>} messageSessions A dictionary of the MessageSession
+   * @property messageSessions A dictionary of the MessageSession
    * objects associated with this client.
    */
-  messageSessions: Dictionary<MessageSession>;
-  /**
-   * @property {Dictionary<MessageSession>} expiredMessageSessions A dictionary that stores expired message sessions IDs.
-   */
-  expiredMessageSessions: Dictionary<boolean>;
+  messageSessions: { [name: string]: MessageSession }
   /**
    * @property {MessageSender} [sender] The ServiceBus sender associated with the client entity.
    */
@@ -69,17 +62,6 @@ export interface ClientEntityContextBase {
    * messages received using the management client.
    */
   requestResponseLockedMessages: ConcurrentExpiringMap<string>;
-  /**
-   * @property {SessionManager} [sessionManager] SessionManager is responsible for efficiently
-   * receiving messages from multiple message sessions.
-   */
-  sessionManager?: SessionManager;
-
-  /**
-   * @property {ClientType} [clientType] Type of the client, used mostly for logging
-   */
-  clientType: ClientType;
-
   /**
    * @property {string} [clientId] Unique Id of the client for which this context is created
    */
@@ -118,7 +100,6 @@ export namespace ClientEntityContext {
    */
   export function create(
     entityPath: string,
-    clientType: ClientType,
     context: ConnectionContext,
     clientId: string,
     options?: ClientEntityContextOptions
@@ -133,34 +114,14 @@ export namespace ClientEntityContext {
     const entityContext: ClientEntityContextBase = {
       namespace: context,
       entityPath: entityPath,
-      clientType: clientType,
       clientId: clientId,
       isClosed: false,
       requestResponseLockedMessages: new ConcurrentExpiringMap<string>(),
       isSessionEnabled: !!options.isSessionEnabled,
-      messageSessions: {},
-      expiredMessageSessions: {}
+      messageSessions: {}
     };
 
-    (entityContext as ClientEntityContext).sessionManager = new SessionManager(
-      entityContext as ClientEntityContext
-    );
-
     (entityContext as ClientEntityContext).getReceiver = (name: string, sessionId?: string) => {
-      if (sessionId != undefined && entityContext.expiredMessageSessions[sessionId]) {
-        const error = new Error(
-          `The session lock has expired on the session with id ${sessionId}.`
-        );
-        error.name = "SessionLockLostError";
-        log.error(
-          "[%s] Failed to find receiver '%s' as the session with id '%s' is expired",
-          entityContext.namespace.connectionId,
-          name,
-          sessionId
-        );
-        throw error;
-      }
-
       if (
         sessionId != null &&
         entityContext.messageSessions[sessionId] &&
@@ -201,62 +162,65 @@ export namespace ClientEntityContext {
 
     (entityContext as ClientEntityContext).onDetached = async (error?: AmqpError | Error) => {
       const connectionId = entityContext.namespace.connectionId;
-
+      const detachCalls: Promise<void>[] = [];
       // Call onDetached() on sender so that it can decide whether to reconnect or not
       const sender = entityContext.sender;
       if (sender && !sender.isConnecting) {
-        try {
-          log.error("[%s] calling detached on sender '%s'.", connectionId, sender.name);
-          await sender.onDetached();
-        } catch (err) {
-          log.error(
-            "[%s] An error occurred while calling onDetached() the sender '%s': %O.",
-            connectionId,
-            sender.name,
-            err
-          );
-        }
+        log.error("[%s] calling detached on sender '%s'.", connectionId, sender.name);
+        detachCalls.push(
+          sender.onDetached().catch((err) => {
+            log.error(
+              "[%s] An error occurred while calling onDetached() the sender '%s': %O.",
+              connectionId,
+              sender.name,
+              err
+            );
+          })
+        );
       }
 
       // Call onDetached() on batchingReceiver so that it can gracefully close any ongoing batch operation.
       const batchingReceiver = entityContext.batchingReceiver;
       if (batchingReceiver && !batchingReceiver.isConnecting) {
-        try {
-          log.error(
-            "[%s] calling detached on batching receiver '%s'.",
-            connectionId,
-            batchingReceiver.name
-          );
-          await batchingReceiver.onDetached(error);
-        } catch (err) {
-          log.error(
-            "[%s] An error occurred while calling onDetached() on the batching receiver '%s': %O.",
-            connectionId,
-            batchingReceiver.name,
-            err
-          );
-        }
+        log.error(
+          "[%s] calling detached on batching receiver '%s'.",
+          connectionId,
+          batchingReceiver.name
+        );
+        detachCalls.push(
+          batchingReceiver.onDetached(error).catch((err) => {
+            log.error(
+              "[%s] An error occurred while calling onDetached() on the batching receiver '%s': %O.",
+              connectionId,
+              batchingReceiver.name,
+              err
+            );
+          })
+        );
       }
 
       // Call onDetached() on streamingReceiver so that it can decide whether to reconnect or not
       const streamingReceiver = entityContext.streamingReceiver;
       if (streamingReceiver && !streamingReceiver.isConnecting) {
-        try {
-          log.error(
-            "[%s] calling detached on streaming receiver '%s'.",
-            connectionId,
-            streamingReceiver.name
-          );
-          await streamingReceiver.onDetached(error);
-        } catch (err) {
-          log.error(
-            "[%s] An error occurred while calling onDetached() on the streaming receiver '%s': %O.",
-            connectionId,
-            streamingReceiver.name,
-            err
-          );
-        }
+        log.error(
+          "[%s] calling detached on streaming receiver '%s'.",
+          connectionId,
+          streamingReceiver.name
+        );
+        const causedByDisconnect = true;
+        detachCalls.push(
+          streamingReceiver.onDetached(error, causedByDisconnect).catch((err) => {
+            log.error(
+              "[%s] An error occurred while calling onDetached() on the streaming receiver '%s': %O.",
+              connectionId,
+              streamingReceiver.name,
+              err
+            );
+          })
+        );
       }
+
+      await Promise.all(detachCalls);
     };
 
     const isManagementClientSharedWithOtherClients = (): boolean => {
@@ -302,11 +266,6 @@ export namespace ClientEntityContext {
         await entityContext.messageSessions[messageSessionId].close();
       }
 
-      // Close the sessionManager.
-      if (entityContext.sessionManager) {
-        entityContext.sessionManager.close();
-      }
-
       // Make sure that we clear the map of deferred messages
       entityContext.requestResponseLockedMessages.clear();
 
@@ -347,9 +306,15 @@ export namespace ClientEntityContext {
   }
 }
 
-// Multiple clients for the same Service Bus entity should be using the same management client.
+/**
+ * Gets the management client for given entity path as 
+ * multiple clients for the same Service Bus entity use the same management client.
+ * 
+ * @internal
+ * @ignore
+ */
 function getManagementClient(
-  clients: Dictionary<ClientEntityContext>,
+  clients: { [name: string]: ClientEntityContext },
   entityPath: string
 ): ManagementClient | undefined {
   let result: ManagementClient | undefined;

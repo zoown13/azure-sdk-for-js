@@ -4,12 +4,10 @@ import { QueueClient } from "../src/QueueClient";
 import { record, delay, Recorder } from "@azure/test-utils-recorder";
 import * as dotenv from "dotenv";
 import { extractConnectionStringParts } from "../src/utils/utils.common";
-import { setupEnvironment } from "./utils/testutils.common";
-dotenv.config({ path: "../.env" });
+import { recorderEnvSetup } from "./utils/index.browser";
+dotenv.config();
 
 describe("QueueClient messageId methods", () => {
-  setupEnvironment();
-  const queueServiceClient = getQSU();
   let queueName: string;
   let queueClient: QueueClient;
   const messageContent = "Hello World";
@@ -17,7 +15,8 @@ describe("QueueClient messageId methods", () => {
   let recorder: Recorder;
 
   beforeEach(async function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
+    const queueServiceClient = getQSU();
     queueName = recorder.getUniqueName("queue");
     queueClient = queueServiceClient.getQueueClient(queueName);
     await queueClient.create();
@@ -25,7 +24,7 @@ describe("QueueClient messageId methods", () => {
 
   afterEach(async function() {
     await queueClient.delete();
-    recorder.stop();
+    await recorder.stop();
   });
 
   it("update and delete empty message with default parameters", async () => {

@@ -1,5 +1,5 @@
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+// Licensed under the MIT license.
 
 import { AbortSignalLike } from "@azure/abort-controller";
 import { PollOperationState, PollOperation } from "@azure/core-lro";
@@ -54,7 +54,9 @@ async function update(
     try {
       state.result = (await client.getSecret(name, { requestOptions })).properties;
       state.isCompleted = true;
-    } catch (_) {}
+    } catch {
+      // Nothing to do here.
+    }
     if (!state.isCompleted) {
       state.result = await client.recoverDeletedSecret(name, { requestOptions });
       state.isStarted = true;
@@ -84,8 +86,7 @@ async function update(
  * @param [options] The optional parameters, which is only an abortSignal from @azure/abort-controller
  */
 async function cancel(
-  this: RecoverDeletedSecretPollOperation,
-  _: { abortSignal?: AbortSignal } = {}
+  this: RecoverDeletedSecretPollOperation
 ): Promise<RecoverDeletedSecretPollOperation> {
   throw new Error("Canceling the deletion of a secret is not supported.");
 }

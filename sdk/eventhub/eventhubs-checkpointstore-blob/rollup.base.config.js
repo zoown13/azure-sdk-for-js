@@ -20,20 +20,19 @@ const production = process.env.NODE_ENV === "production";
 
 export function nodeConfig(test = false) {
   const externalNodeBuiltins = ["events", "util", "os"];
+  const additionalExternals = ["keytar"];
   const baseConfig = {
     input: input,
-    external: depNames.concat(externalNodeBuiltins),
+    external: depNames.concat(externalNodeBuiltins, additionalExternals),
     output: { file: "dist/index.js", format: "cjs", sourcemap: true },
     preserveSymlinks: false,
     plugins: [
       sourcemaps(),
       replace({
         delimiters: ["", ""],
-        values: {
-          // replace dynamic checks with if (true) since this is for node only.
-          // Allows rollup's dead code elimination to be more aggressive.
-          "if (isNode)": "if (true)"
-        }
+        // replace dynamic checks with if (true) since this is for node only.
+        // Allows rollup's dead code elimination to be more aggressive.
+        "if (isNode)": "if (true)"
       }),
       nodeResolve({ preferBuiltins: true }),
       cjs(),
@@ -90,7 +89,7 @@ export function browserConfig(test = false) {
     input: input,
     external: ["ms-rest-js"],
     output: {
-      file: "browser/eventhubs-checkpointstore-blob.js",
+      file: "dist-browser/eventhubs-checkpointstore-blob.js",
       format: "umd",
       name: "Azure.Messaging.EventHubs.CheckpointStore.Blob",
       sourcemap: true,
@@ -103,12 +102,10 @@ export function browserConfig(test = false) {
         // ms-rest-js is externalized so users must include it prior to using this bundle.
         {
           delimiters: ["", ""],
-          values: {
-            // replace dynamic checks with if (false) since this is for
-            // browser only. Rollup's dead code elimination will remove
-            // any code guarded by if (isNode) { ... }
-            "if (isNode)": "if (false)"
-          }
+          // replace dynamic checks with if (false) since this is for
+          // browser only. Rollup's dead code elimination will remove
+          // any code guarded by if (isNode) { ... }
+          "if (isNode)": "if (false)"
         }
       ),
 

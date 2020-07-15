@@ -3,19 +3,18 @@ import * as dotenv from "dotenv";
 import { QueueServiceClient } from "../src/QueueServiceClient";
 import { getAlternateQSU, getQSU, getSASConnectionStringFromEnvironment } from "./utils";
 import { record, delay, Recorder } from "@azure/test-utils-recorder";
-import { setupEnvironment } from "./utils/testutils.common";
-dotenv.config({ path: "../.env" });
+import { recorderEnvSetup } from "./utils/index.browser";
+dotenv.config();
 
 describe("QueueServiceClient", () => {
-  setupEnvironment();
   let recorder: Recorder;
 
   beforeEach(function() {
-    recorder = record(this);
+    recorder = record(this, recorderEnvSetup);
   });
 
-  afterEach(function() {
-    recorder.stop();
+  afterEach(async function() {
+    await recorder.stop();
   });
 
   it("listQueues with default parameters", async () => {
@@ -145,7 +144,7 @@ describe("QueueServiceClient", () => {
     await queueClient1.create({ metadata: { key: "val" } });
     await queueClient2.create({ metadata: { key: "val" } });
 
-    let iter1 = await queueServiceClient.listQueues({
+    let iter1 = queueServiceClient.listQueues({
       includeMetadata: true,
       prefix: queueNamePrefix
     });

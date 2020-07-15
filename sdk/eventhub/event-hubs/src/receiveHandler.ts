@@ -1,8 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 import { EventHubReceiver } from "./eventHubReceiver";
-import { logger, logErrorStackTrace } from "./log";
+import { logErrorStackTrace, logger } from "./log";
 
 /**
  * Describes the receive handler object that is returned from the receive() method with handlers.
@@ -14,7 +14,6 @@ import { logger, logErrorStackTrace } from "./log";
 export class ReceiveHandler {
   /**
    * @property _receiver  The underlying EventHubReceiver.
-   * @private
    */
   private _receiver: EventHubReceiver;
 
@@ -64,10 +63,10 @@ export class ReceiveHandler {
         await this._receiver.close();
       } catch (err) {
         logger.warning(
-          "An error occurred while stopping the receiver '%s' with address '%s': %O",
+          "An error occurred while stopping the receiver '%s' with address '%s': %s",
           this._receiver.name,
           this._receiver.address,
-          err
+          `${err?.name}: ${err?.message}`
         );
         logErrorStackTrace(err);
       }

@@ -2,16 +2,17 @@
 // Licensed under the MIT license.
 
 import { assert } from "chai";
-import { makeAnalyzeSentimentResultCollection } from "../src/analyzeSentimentResultCollection";
-import { makeDetectLanguageResultCollection } from "../src/detectLanguageResultCollection";
-import { makeExtractKeyPhrasesResultCollection } from "../src/extractKeyPhrasesResultCollection";
-import { makeRecognizeLinkedEntitiesResultCollection } from "../src/recognizeLinkedEntitiesResultCollection";
-import { makeRecognizeEntitiesResultCollection } from "../src/recognizeEntitiesResultCollection";
-import { LanguageInput, MultiLanguageInput } from "../src/generated/models";
 
-describe("SentimentResultCollection", () => {
+import { makeAnalyzeSentimentResultArray } from "../src/analyzeSentimentResultArray";
+import { makeDetectLanguageResultArray } from "../src/detectLanguageResultArray";
+import { makeExtractKeyPhrasesResultArray } from "../src/extractKeyPhrasesResultArray";
+import { makeRecognizeLinkedEntitiesResultArray } from "../src/recognizeLinkedEntitiesResultArray";
+import { makeRecognizeCategorizedEntitiesResultArray } from "../src/recognizeCategorizedEntitiesResultArray";
+import { DetectLanguageInput, TextDocumentInput } from "../src/generated/models";
+
+describe("SentimentResultArray", () => {
   it("merges items in order", () => {
-    const input: MultiLanguageInput[] = [
+    const input: TextDocumentInput[] = [
       {
         id: "A",
         text: "test"
@@ -25,35 +26,37 @@ describe("SentimentResultCollection", () => {
         text: "test3"
       }
     ];
-    const result = makeAnalyzeSentimentResultCollection(
+    const result = makeAnalyzeSentimentResultArray(
       input,
       [
         {
           id: "A",
-          documentScores: {
+          confidenceScores: {
             positive: 1,
             negative: 0,
             neutral: 0
           },
           sentenceSentiments: [],
-          sentiment: "positive"
+          sentiment: "positive",
+          warnings: []
         },
         {
           id: "C",
-          documentScores: {
+          confidenceScores: {
             positive: 0,
             negative: 1,
             neutral: 0
           },
           sentenceSentiments: [],
-          sentiment: "negative"
+          sentiment: "negative",
+          warnings: []
         }
       ],
       [
         {
           id: "B",
           error: {
-            code: "internalServerError",
+            code: "InternalServerError",
             message: "test error"
           }
         }
@@ -67,9 +70,9 @@ describe("SentimentResultCollection", () => {
   });
 });
 
-describe("DetectLanguageResultCollection", () => {
+describe("DetectLanguageResultArray", () => {
   it("merges items in order", () => {
-    const input: LanguageInput[] = [
+    const input: DetectLanguageInput[] = [
       {
         id: "A",
         text: "test"
@@ -83,40 +86,33 @@ describe("DetectLanguageResultCollection", () => {
         text: "test3"
       }
     ];
-    const result = makeDetectLanguageResultCollection(
+    const result = makeDetectLanguageResultArray(
       input,
       [
         {
           id: "A",
-          detectedLanguages: [
-            {
-              name: "English",
-              iso6391Name: "en",
-              score: 1
-            }
-          ]
+          detectedLanguage: {
+            name: "English",
+            iso6391Name: "en",
+            confidenceScore: 1
+          },
+          warnings: []
         },
         {
           id: "C",
-          detectedLanguages: [
-            {
-              name: "French",
-              iso6391Name: "fr",
-              score: 1
-            },
-            {
-              name: "English",
-              iso6391Name: "en",
-              score: 0.5
-            }
-          ]
+          detectedLanguage: {
+            name: "French",
+            iso6391Name: "fr",
+            confidenceScore: 1
+          },
+          warnings: []
         }
       ],
       [
         {
           id: "B",
           error: {
-            code: "internalServerError",
+            code: "InternalServerError",
             message: "test error"
           }
         }
@@ -130,9 +126,9 @@ describe("DetectLanguageResultCollection", () => {
   });
 });
 
-describe("ExtractKeyPhrasesResultCollection", () => {
+describe("ExtractKeyPhrasesResultArray", () => {
   it("merges items in order", () => {
-    const input: MultiLanguageInput[] = [
+    const input: TextDocumentInput[] = [
       {
         id: "A",
         text: "test"
@@ -146,23 +142,25 @@ describe("ExtractKeyPhrasesResultCollection", () => {
         text: "test3"
       }
     ];
-    const result = makeExtractKeyPhrasesResultCollection(
+    const result = makeExtractKeyPhrasesResultArray(
       input,
       [
         {
           id: "A",
-          keyPhrases: ["test", "test2"]
+          keyPhrases: ["test", "test2"],
+          warnings: []
         },
         {
           id: "C",
-          keyPhrases: ["awesome"]
+          keyPhrases: ["awesome"],
+          warnings: []
         }
       ],
       [
         {
           id: "B",
           error: {
-            code: "internalServerError",
+            code: "InternalServerError",
             message: "test error"
           }
         }
@@ -176,9 +174,9 @@ describe("ExtractKeyPhrasesResultCollection", () => {
   });
 });
 
-describe("RecognizeEntitiesResultCollection", () => {
+describe("RecognizeCategorizedEntitiesResultArray", () => {
   it("merges items in order", () => {
-    const input: MultiLanguageInput[] = [
+    const input: TextDocumentInput[] = [
       {
         id: "A",
         text: "test"
@@ -192,7 +190,7 @@ describe("RecognizeEntitiesResultCollection", () => {
         text: "test3"
       }
     ];
-    const result = makeRecognizeEntitiesResultCollection(
+    const result = makeRecognizeCategorizedEntitiesResultArray(
       input,
       [
         {
@@ -200,32 +198,30 @@ describe("RecognizeEntitiesResultCollection", () => {
           entities: [
             {
               text: "Microsoft",
-              type: "Organization",
-              offset: 10,
-              length: 9,
-              score: 0.9989
+              category: "Organization",
+              confidenceScore: 0.9989
             }
-          ]
+          ],
+          warnings: []
         },
         {
           id: "C",
           entities: [
             {
               text: "last week",
-              type: "DateTime",
-              subtype: "DateRange",
-              offset: 34,
-              length: 9,
-              score: 0.8
+              category: "DateTime",
+              subCategory: "DateRange",
+              confidenceScore: 0.8
             }
-          ]
+          ],
+          warnings: []
         }
       ],
       [
         {
           id: "B",
           error: {
-            code: "internalServerError",
+            code: "InternalServerError",
             message: "test error"
           }
         }
@@ -239,9 +235,9 @@ describe("RecognizeEntitiesResultCollection", () => {
   });
 });
 
-describe("RecognizeLinkedEntitiesResultCollection", () => {
+describe("RecognizeLinkedEntitiesResultArray", () => {
   it("merges items in order", () => {
-    const input: MultiLanguageInput[] = [
+    const input: TextDocumentInput[] = [
       {
         id: "A",
         text: "test"
@@ -255,7 +251,7 @@ describe("RecognizeLinkedEntitiesResultCollection", () => {
         text: "test3"
       }
     ];
-    const result = makeRecognizeLinkedEntitiesResultCollection(
+    const result = makeRecognizeLinkedEntitiesResultArray(
       input,
       [
         {
@@ -266,17 +262,16 @@ describe("RecognizeLinkedEntitiesResultCollection", () => {
               matches: [
                 {
                   text: "Seattle",
-                  offset: 26,
-                  length: 7,
-                  score: 0.15046201222847677
+                  confidenceScore: 0.15046201222847677
                 }
               ],
               language: "en",
-              id: "Seattle",
+              dataSourceEntityId: "Seattle",
               url: "https://en.wikipedia.org/wiki/Seattle",
               dataSource: "Wikipedia"
             }
-          ]
+          ],
+          warnings: []
         },
         {
           id: "C",
@@ -286,24 +281,23 @@ describe("RecognizeLinkedEntitiesResultCollection", () => {
               matches: [
                 {
                   text: "Microsoft",
-                  offset: 10,
-                  length: 9,
-                  score: 0.1869365971673207
+                  confidenceScore: 0.1869365971673207
                 }
               ],
               language: "en",
-              id: "Microsoft",
+              dataSourceEntityId: "Microsoft",
               url: "https://en.wikipedia.org/wiki/Microsoft",
               dataSource: "Wikipedia"
             }
-          ]
+          ],
+          warnings: []
         }
       ],
       [
         {
           id: "B",
           error: {
-            code: "internalServerError",
+            code: "InternalServerError",
             message: "test error"
           }
         }
