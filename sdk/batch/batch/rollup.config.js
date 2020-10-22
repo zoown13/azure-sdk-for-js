@@ -1,9 +1,9 @@
-import rollup from "rollup";
-import nodeResolve from "rollup-plugin-node-resolve";
+import cjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import inject from "@rollup/plugin-inject";
 import sourcemaps from "rollup-plugin-sourcemaps";
-import cjs from "rollup-plugin-commonjs";
-import inject from "rollup-plugin-inject";
-import json from "rollup-plugin-json";
+import { terser } from "rollup-plugin-terser";
 
 /**
  * @type {rollup.RollupFileOptions}
@@ -29,7 +29,10 @@ const config = {
  */`
   },
   plugins: [
-    nodeResolve({ module: true, preferBuiltins: false }),
+    nodeResolve({
+      mainFields: ["module", "main"],
+      preferBuiltins: false
+    }),
     sourcemaps(),
     cjs({
       namedExports: {
@@ -44,9 +47,20 @@ const config = {
       },
       exclude: ["./**/package.json"]
     }),
+    json(),
+    terser()
+  ],
+  onwarn: (warning) => {
+    if (
+      warning.code === "CIRCULAR_DEPENDENCY" &&
+      warning.importer.indexOf(path.normalize("node_modules/chai/lib") === 0)
+    ) {
+      // Chai contains circular references, but they are not fatal and can be ignored.
+      return;
+    }
 
-    json()
-  ]
+    console.error(`(!) ${warning.message}`);
+  }
 };
 
 export default config;
