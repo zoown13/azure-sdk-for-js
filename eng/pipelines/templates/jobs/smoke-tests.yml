@@ -24,7 +24,7 @@ jobs:
             ./Initialize-SmokeTests.ps1 -DryRun -CI -Verbose -ServiceDirectory ${{ parameters.ServiceDirectory }}
             $packages = Get-Content ./run-manifest.json | ConvertFrom-Json
             $packages | ForEach-Object {
-              Write-Host "Smoke tests will run for $_.Name"
+              Write-Host "Smoke tests will run for $($_.Name)"
               Write-Host "##vso[task.setvariable variable=RunSmokeTests;isOutput=true;]true"
             }
           name: check_smoke_tests
