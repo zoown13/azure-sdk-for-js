@@ -14,6 +14,10 @@ jobs:
     - job: smoke_test_eligibility
       displayName: Check Smoke Test Eligibility
       steps:
+        - pwsh: npm install -g
+          workingDirectory: $(Build.SourcesDirectory)/common/tools/dev-tool
+          displayName: Install dev-tool
+
         - pwsh: |
             $(Build.SourcesDirectory)/eng/common/TestResources/Import-AzModules.ps1
 
