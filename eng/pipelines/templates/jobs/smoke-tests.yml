@@ -15,6 +15,8 @@ jobs:
       displayName: Check Smoke Test Eligibility
       steps:
         - pwsh: |
+            $(Build.SourcesDirectory)/eng/common/TestResources/Import-AzModules.ps1
+
             ./Initialize-SmokeTests.ps1 -DryRun -CI -Verbose -ServiceDirectory ${{ parameters.ServiceDirectory }}
             $packages = Get-Content ./run-manifest.json | ConvertFrom-Json
             $packages | ForEach-Object {
