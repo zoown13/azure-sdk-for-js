@@ -259,6 +259,8 @@ function Export-Configs {
   Write-Verbose "Writing run-manifest.json"
   Write-Verbose "$repoRoot/common/smoke-test/run-manifest.json"
   ($runManifest | ConvertTo-Json -AsArray | Set-Content -Path "$repoRoot/common/smoke-test/run-manifest.json" -Force)
+  $content = Get-Content "$repoRoot/common/smoke-test/run-manifest.json"
+  Write-Verbose $content
 
   Write-Verbose "Writing dependencies into Smoke Test package.json"
   $runnerPackageSpec = Get-Content "$repoRoot/common/smoke-test/package.json" | ConvertFrom-Json -AsHashtable
