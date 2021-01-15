@@ -258,7 +258,8 @@ function Export-Configs {
 
   Write-Verbose "Writing run-manifest.json"
   Write-Verbose "$repoRoot/common/smoke-test/run-manifest.json"
-  ($runManifest | ConvertTo-Json -AsArray | Set-Content -Path "$repoRoot/common/smoke-test/run-manifest.json" -Force)
+  #($runManifest | ConvertTo-Json -AsArray | Set-Content -Path "$repoRoot/common/smoke-test/run-manifest.json" -Force)
+  @(@{ "a" = 1 }) | ConvertTo-Json -AsArray | Set-Content -Path "$repoRoot/common/smoke-test/run-manifest.json" -Force
   $content = Get-Content "$repoRoot/common/smoke-test/run-manifest.json"
   Write-Verbose $content
 
