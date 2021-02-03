@@ -19,7 +19,7 @@ describe.only("Create And Read Validation", function() {
   afterEach(removeAllDatabases);
   beforeEach(removeAllDatabases);
 
-  it.only("check if the document from db matches the actual document", async function() {
+  it("check if the document from db matches the actual document", async function() {
     try {
       // Create Database
       const database = await getTestDatabase(databaseId);
