@@ -112,7 +112,7 @@
     "long": "^4.0.0",
     "process": "^0.11.10",
     "tslib": "^2.0.0",
-    "rhea-promise": "amqp/rhea-promise#68fdda18a12f0140a59c418c23341e6e86c94538"
+    "rhea-promise": "../../rhea-promise-1.1.0.tgz"
   },
   "devDependencies": {
     "@azure/dev-tool": "^1.0.0",
