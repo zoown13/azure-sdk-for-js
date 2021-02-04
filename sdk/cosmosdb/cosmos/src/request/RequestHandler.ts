@@ -80,7 +80,7 @@ async function httpRequest(requestContext: RequestContext) {
   clearTimeout(timeout);
 
   const result =
-    response.status === 204 || response.status === 304 ? null : await _parseJSON(response);
+    response.status === 204 || response.status === 304 ? null : await response.json();
   const headers = {} as any;
   response.headers.forEach((value: string, key: string) => {
     headers[key] = value;
@@ -150,11 +150,4 @@ export async function request<T>(requestContext: RequestContext): Promise<Cosmos
     requestContext,
     executeRequest
   });
-}
-
-async function _parseJSON(response: any) {
-  console.log({ response });
-  const text = await response.text();
-  console.log({ responseText: text });
-  return text ? JSON.parse(text) : {};
 }
