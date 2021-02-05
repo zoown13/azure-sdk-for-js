@@ -112,7 +112,7 @@
     "long": "^4.0.0",
     "process": "^0.11.10",
     "tslib": "^2.0.0",
-    "rhea-promise": "HarshaNalluru/rhea-promise#dfe5879f793c7cf1f0a49c69a980226abb9dfe63"
+    "rhea-promise": "HarshaNalluru/rhea-promise#6de69f7425b830d1bafe02ab940d922d2488352c"
   },
   "devDependencies": {
     "@azure/dev-tool": "^1.0.0",
