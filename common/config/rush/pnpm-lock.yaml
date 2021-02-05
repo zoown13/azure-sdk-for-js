@@ -5855,14 +5855,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-+6uilZXSJGyiqVeHQI3Krv6NTAd8cWRCY2uyCxmzR4/5IFtBqqFem1HV2OiwSj0Gu7OFChIJDfH2JyjN7J0vRA==
-  /rhea-promise/1.0.0:
-    dependencies:
-      debug: 3.2.7
-      rhea: 1.0.24
-      tslib: 1.14.1
-    dev: false
-    resolution:
-      integrity: sha512-odAjpbB/IpFFBenPDwPkTWMQldt+DUlMBH9yI48Ct5OgTeDuuQcBnlhB+YCc6g2z8+URiP2ejms88joEanNCaw==
   /rhea/1.0.24:
     dependencies:
       debug: 3.2.7
@@ -7802,7 +7794,7 @@ packages:
     dev: false
     name: '@rush-temp/communication-chat'
     resolution:
-      integrity: sha512-nhL1aTORnhj0t5QpOOjtS1l/15DK+nImcY6QLf6lgSzybowm6pa3c8umqx2cRFZj4m8DNAc3vKlhR5B8X47djA==
+      integrity: sha512-i3KOyWl2aDfSk/1RL4KZIf+ZMF5GUxt3dKgGVFrrUqu8E8Tub7+8vuXpfO5FAdzBaUvo7Q7eR58LYfXANsDSYQ==
       tarball: file:projects/communication-chat.tgz
     version: 0.0.0
   file:projects/communication-common.tgz:
@@ -8007,7 +7999,7 @@ packages:
       process: 0.11.10
       puppeteer: 3.3.0
       rhea: 1.0.24
-      rhea-promise: 1.0.0
+      rhea-promise: github.com/HarshaNalluru/rhea-promise/6de69f7425b830d1bafe02ab940d922d2488352c
       rimraf: 3.0.2
       rollup: 1.32.1
       rollup-plugin-shim: 1.0.0
@@ -8024,7 +8016,7 @@ packages:
     dev: false
     name: '@rush-temp/core-amqp'
     resolution:
-      integrity: sha512-GIu8eEWQOHWJxZ0Bz7V0WJrDndPmqAEklsfIzR2K96UTwH/S1ceizvhxgMbV+8AhiWId/zlLbb77ikAq0XPS4A==
+      integrity: sha512-EsHxd0dWhERJ3gC+CgxPITzK9LsYL3CovkMixwgis18uZNqe7qNYcifiF5YnY9iMOg78AFTsgauUDp6C8faB2Q==
       tarball: file:projects/core-amqp.tgz
     version: 0.0.0
   file:projects/core-asynciterator-polyfill.tgz:
@@ -8724,7 +8716,7 @@ packages:
       prettier: 1.19.1
       process: 0.11.10
       puppeteer: 3.3.0
-      rhea-promise: 1.0.0
+      rhea-promise: github.com/HarshaNalluru/rhea-promise/6de69f7425b830d1bafe02ab940d922d2488352c
       rimraf: 3.0.2
       rollup: 1.32.1
       rollup-plugin-shim: 1.0.0
@@ -8740,7 +8732,7 @@ packages:
     dev: false
     name: '@rush-temp/event-hubs'
     resolution:
-      integrity: sha512-ixhB/HUr9B8PxFyMgpAdatlQ4sVmtzwWHm/C+HqktvxAft+Rx8SSe+g95HIFJ6ATOVMkt4BguJZsjSV8ZHvZhQ==
+      integrity: sha512-4wElZYPMvHIBtL4FHs79yC6KIHoB97+8J6nGXQumTPuxFrtb2i+7rRZuQ09kk0bJfKJHej9x9+a+1GJDNZ5kXA==
       tarball: file:projects/event-hubs.tgz
     version: 0.0.0
   file:projects/event-processor-host.tgz:
@@ -9012,7 +9004,7 @@ packages:
     dev: false
     name: '@rush-temp/keyvault-admin'
     resolution:
-      integrity: sha512-pSjOdUjTAth9ylj2BwYYrMlIGx8V8cfugSMI0TprzRpGO1ihgE5dUJo+W/FYjPc/mTCKCB9sWJFZNqd6nWabgg==
+      integrity: sha512-H3/yHvEC5jsPdl2owV1o0xpWmiVPs25gankrSY6FsSFLkdNduPCgQa5Z+4m6YWmFAIRwtN2kSKXrpiYdknKoOA==
       tarball: file:projects/keyvault-admin.tgz
     version: 0.0.0
   file:projects/keyvault-certificates.tgz:
@@ -9556,7 +9548,7 @@ packages:
       process: 0.11.10
       promise: 8.1.0
       puppeteer: 3.3.0
-      rhea-promise: 1.0.0
+      rhea-promise: github.com/HarshaNalluru/rhea-promise/6de69f7425b830d1bafe02ab940d922d2488352c
       rimraf: 3.0.2
       rollup: 1.32.1
       rollup-plugin-shim: 1.0.0
@@ -9571,7 +9563,7 @@ packages:
     dev: false
     name: '@rush-temp/service-bus'
     resolution:
-      integrity: sha512-kkDyNrEU+rumWnaczL6uTraDLrhTEI2V5atnyevxiUjGjPYR+jJ1mgXFTuBQdwO+bMgM/1u11N7zJUc6lrByWw==
+      integrity: sha512-Ib+g1dFQCuJakWB28tUWTTH8YQf+K+RUZ5O1q9jRKHWVMdiXbGzQZuz+Vq5iw2FkLKpSeXvKMO1KknXOyLz8pQ==
       tarball: file:projects/service-bus.tgz
     version: 0.0.0
   file:projects/storage-blob-changefeed.tgz:
@@ -10059,7 +10051,7 @@ packages:
     dev: false
     name: '@rush-temp/template'
     resolution:
-      integrity: sha512-7vYHfS2+EcYRylnk5SStmqNPqVsLPsiTiPE8kw2iSGR2+euWvPBxdL8WY75tYH8f+Q75d9wVqjodMJfMJL2o3g==
+      integrity: sha512-ZLhLgVN00A0XbT47yoidIifusG92TM2zzSDDbRV3M4ROXdY87RIDPfjuRDShYkS+ebdWnGtnKXgYqtlbZHtGEg==
       tarball: file:projects/template.tgz
     version: 0.0.0
   file:projects/test-utils-multi-version.tgz:
@@ -10189,6 +10181,16 @@ packages:
       integrity: sha512-o7zYyw6/QJHBg2/e3mbbeOe+ohKdRse2FU1aX4i7AdO+1337l44mWy1DwVWhcFUy5aSzahd194/6nrgp7Sj6JQ==
       tarball: file:projects/testhub.tgz
     version: 0.0.0
+  github.com/HarshaNalluru/rhea-promise/6de69f7425b830d1bafe02ab940d922d2488352c:
+    dependencies:
+      debug: 3.2.7
+      rhea: 1.0.24
+      tslib: 1.14.1
+    dev: false
+    name: rhea-promise
+    resolution:
+      tarball: https://codeload.github.com/HarshaNalluru/rhea-promise/tar.gz/6de69f7425b830d1bafe02ab940d922d2488352c
+    version: 1.1.0
 registry: ''
 specifiers:
   '@rush-temp/abort-controller': file:./projects/abort-controller.tgz
